@@ -777,6 +777,7 @@ a {
 
 .msg-user .msg-text {
   color: var(--ink);
+  white-space: pre-wrap;
 }
 
 .msg-error .msg-text {
@@ -824,6 +825,131 @@ a {
   border-radius: 4px;
   background: var(--surface-sunk);
   border: 1px solid var(--hairline);
+}
+
+/* markdown blocks */
+
+.md-h {
+  color: var(--ink);
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.011em;
+}
+
+.md-h:first-child {
+  margin-top: 0;
+}
+
+.md-h1 {
+  font-size: 20px;
+  margin: 18px 0 10px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.md-h2 {
+  font-size: 16.5px;
+  margin: 18px 0 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.md-h3 {
+  font-size: 15px;
+  margin: 15px 0 6px;
+}
+
+.md-h4,
+.md-h5,
+.md-h6 {
+  font-size: 14px;
+  margin: 13px 0 5px;
+}
+
+.md-h5,
+.md-h6 {
+  color: var(--ink-soft);
+}
+
+.md-p {
+  margin: 8px 0;
+}
+
+.md-p:first-child {
+  margin-top: 0;
+}
+
+.md-p:last-child {
+  margin-bottom: 0;
+}
+
+.md-hr {
+  border: none;
+  border-top: 1px solid var(--hairline-strong);
+  margin: 16px 0;
+}
+
+.md-quote {
+  margin: 10px 0;
+  padding: 2px 0 2px 12px;
+  border-left: 3px solid var(--accent-line);
+  color: var(--muted);
+}
+
+.md-list {
+  margin: 8px 0;
+  padding-left: 22px;
+}
+
+.md-list .md-list {
+  margin: 3px 0;
+}
+
+.md-li {
+  margin: 3px 0;
+}
+
+.md-table-wrap {
+  margin: 12px 0;
+  overflow-x: auto;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+}
+
+.md-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.md-table th {
+  background: var(--surface-sunk);
+  color: var(--ink);
+  font-weight: 600;
+  text-align: left;
+}
+
+.md-table th,
+.md-table td {
+  padding: 7px 11px;
+  border-bottom: 1px solid var(--hairline);
+  vertical-align: top;
+}
+
+.md-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.msg-text a {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-line);
+  text-underline-offset: 2px;
+}
+
+.msg-text a:hover {
+  text-decoration-color: var(--accent-ink);
 }
 
 /* streaming caret */

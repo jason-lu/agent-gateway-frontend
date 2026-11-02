@@ -11,6 +11,11 @@ export interface LoginResponse {
   expiresIn: number
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string
+  newPassword: string
+}
+
 export interface SessionResponse {
   id: string
   owner: string

@@ -3,6 +3,7 @@ import { api, ApiError } from './api/client'
 import type { HealthResponse, SessionResponse } from './api/types'
 import { AdminUsersPage } from './admin/AdminUsersPage'
 import { useAuth, useIsAdmin } from './auth/AuthContext'
+import { ChangePasswordDialog } from './auth/ChangePasswordDialog'
 import { LoginPage } from './auth/LoginPage'
 import { ChatView } from './chat/ChatView'
 import { Sidebar } from './layout/Sidebar'
@@ -23,6 +24,7 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
   const [selectedId, setSelectedId] = useState<string | null>(() => localStorage.getItem(SELECTED_KEY))
   const [view, setView] = useState<'chat' | 'admin'>('chat')
   const [health, setHealth] = useState<HealthResponse | null>(null)
+  const [showChangePassword, setShowChangePassword] = useState(false)
   const [titles, setTitles] = useState<Record<string, string>>(() => {
     try {
       return JSON.parse(localStorage.getItem(TITLES_KEY) ?? '{}') as Record<string, string>
@@ -171,6 +173,7 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
         onDelete={handleDelete}
         onLogout={onLogout}
         onOpenAdmin={() => setView('admin')}
+        onChangePassword={() => setShowChangePassword(true)}
       />
 
       <main className="main">
@@ -224,6 +227,8 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
           </div>
         )}
       </main>
+
+      {showChangePassword ? <ChangePasswordDialog onClose={() => setShowChangePassword(false)} /> : null}
     </div>
   )
 }

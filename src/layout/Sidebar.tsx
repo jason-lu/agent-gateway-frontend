@@ -14,6 +14,7 @@ interface SidebarProps {
   onDelete: (id: string) => Promise<void>
   onLogout: () => void
   onOpenAdmin: () => void
+  onChangePassword: () => void
 }
 
 export function Sidebar({
@@ -29,6 +30,7 @@ export function Sidebar({
   onDelete,
   onLogout,
   onOpenAdmin,
+  onChangePassword,
 }: SidebarProps) {
   const [composing, setComposing] = useState(false)
   const [systemPrompt, setSystemPrompt] = useState('')
@@ -161,6 +163,14 @@ export function Sidebar({
             用户管理
           </button>
         ) : null}
+
+        <button
+          className="btn btn-ghost"
+          style={{ width: '100%', justifyContent: 'flex-start' }}
+          onClick={onChangePassword}
+        >
+          修改密码
+        </button>
 
         <div className="user-row">
           <div className="user-avatar">{username.slice(0, 1).toUpperCase()}</div>

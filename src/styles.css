@@ -208,6 +208,56 @@ a {
   font-size: 13px;
 }
 
+/* ---------- dialog ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 21, 15, 0.34);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  z-index: 60;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  padding: 24px;
+}
+
+.dialog h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.dialog-sub {
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.dialog .error-banner {
+  margin-bottom: 14px;
+}
+
+.dialog-field {
+  margin-bottom: 14px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
 /* ---------- login ---------- */
 
 .login {

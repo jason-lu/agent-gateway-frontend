@@ -1,5 +1,6 @@
 import type {
   AdminUserResponse,
+  ChangePasswordRequest,
   CreateSessionRequest,
   HealthResponse,
   HistoryMessage,
@@ -61,6 +62,9 @@ export const api = {
 
   login: (body: LoginRequest) =>
     request<LoginResponse>('/api/v1/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+
+  changePassword: (body: ChangePasswordRequest) =>
+    request<void>('/api/v1/auth/change-password', { method: 'POST', body: JSON.stringify(body) }),
 
   listSessions: () => request<SessionResponse[]>('/api/v1/sessions'),
 

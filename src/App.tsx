@@ -7,6 +7,7 @@ import { ChangePasswordDialog } from './auth/ChangePasswordDialog'
 import { LoginPage } from './auth/LoginPage'
 import { ChatView } from './chat/ChatView'
 import { Sidebar } from './layout/Sidebar'
+import { UserMenu } from './layout/UserMenu'
 
 const SELECTED_KEY = 'agent.selectedSession'
 const TITLES_KEY = 'agent.sessionTitles'
@@ -165,15 +166,10 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
         selectedId={view === 'chat' ? selectedId : null}
         titles={titles}
         health={health}
-        username={username}
-        isAdmin={isAdmin}
         busy={loading}
         onSelect={handleSelect}
         onCreate={handleCreate}
         onDelete={handleDelete}
-        onLogout={onLogout}
-        onOpenAdmin={() => setView('admin')}
-        onChangePassword={() => setShowChangePassword(true)}
       />
 
       <main className="main">
@@ -202,6 +198,13 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
               </button>
             </div>
           ) : null}
+          <UserMenu
+            username={username}
+            isAdmin={isAdmin}
+            onChangePassword={() => setShowChangePassword(true)}
+            onOpenAdmin={() => setView('admin')}
+            onLogout={onLogout}
+          />
         </div>
 
         {view === 'admin' ? (

@@ -6,15 +6,10 @@ interface SidebarProps {
   selectedId: string | null
   titles: Record<string, string>
   health: HealthResponse | null
-  username: string
-  isAdmin: boolean
   busy: boolean
   onSelect: (id: string) => void
   onCreate: (systemPrompt?: string) => Promise<void>
   onDelete: (id: string) => Promise<void>
-  onLogout: () => void
-  onOpenAdmin: () => void
-  onChangePassword: () => void
 }
 
 export function Sidebar({
@@ -22,15 +17,10 @@ export function Sidebar({
   selectedId,
   titles,
   health,
-  username,
-  isAdmin,
   busy,
   onSelect,
   onCreate,
   onDelete,
-  onLogout,
-  onOpenAdmin,
-  onChangePassword,
 }: SidebarProps) {
   const [composing, setComposing] = useState(false)
   const [systemPrompt, setSystemPrompt] = useState('')
@@ -156,28 +146,6 @@ export function Sidebar({
                   ? 'gateway degraded'
                   : 'llm not configured'}
           </span>
-        </div>
-
-        {isAdmin ? (
-          <button className="btn btn-ghost" style={{ width: '100%', justifyContent: 'flex-start' }} onClick={onOpenAdmin}>
-            用户管理
-          </button>
-        ) : null}
-
-        <button
-          className="btn btn-ghost"
-          style={{ width: '100%', justifyContent: 'flex-start' }}
-          onClick={onChangePassword}
-        >
-          修改密码
-        </button>
-
-        <div className="user-row">
-          <div className="user-avatar">{username.slice(0, 1).toUpperCase()}</div>
-          <div className="user-name">{username}</div>
-          <button className="btn btn-ghost" style={{ height: 24, padding: '0 8px', fontSize: 12 }} onClick={onLogout}>
-            退出
-          </button>
         </div>
       </div>
     </aside>

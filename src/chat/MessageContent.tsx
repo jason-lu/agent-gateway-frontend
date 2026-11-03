@@ -1,10 +1,12 @@
 import { Fragment, type ReactNode } from 'react'
+import { MermaidDiagram } from './MermaidDiagram'
 
 /**
- * Renders LLM replies: fenced code blocks get a framed card; the prose around
- * them is parsed as markdown (headings, tables, lists, quotes, rules, links and
- * inline code/bold/italic). Deliberately dependency-free — a small line-based
- * parser covers what LLM answers actually emit. An unterminated fence (still
+ * Renders LLM replies: fenced code blocks get a framed card (```mermaid fences
+ * become real diagrams once closed); the prose around them is parsed as
+ * markdown (headings, tables, lists, quotes, rules, links and inline
+ * code/bold/italic). Deliberately dependency-free — a small line-based parser
+ * covers what LLM answers actually emit. An unterminated fence (still
  * streaming) renders as code.
  */
 export function MessageContent({ text, streaming = false }: { text: string; streaming?: boolean }) {
@@ -15,15 +17,13 @@ export function MessageContent({ text, streaming = false }: { text: string; stre
   blocks.forEach((block, i) => {
     const tail = i === blocks.length - 1 ? caret : null
     if (block.kind === 'code') {
+      const card = <CodeCard lang={block.lang} content={block.content} />
       nodes.push(
-        <div className="md-code" key={`c${i}`}>
-          <div className="md-code-head">
-            <span>{block.lang || 'code'}</span>
-          </div>
-          <pre>
-            <code>{block.content}</code>
-          </pre>
-        </div>,
+        block.lang.toLowerCase() === 'mermaid' && block.closed ? (
+          <MermaidDiagram key={`c${i}`} code={block.content} fallback={card} />
+        ) : (
+          <Fragment key={`c${i}`}>{card}</Fragment>
+        ),
       )
       if (tail) nodes.push(<Fragment key={`t${i}`}>{tail}</Fragment>)
       return
@@ -42,7 +42,22 @@ export function MessageContent({ text, streaming = false }: { text: string; stre
   return <div className="msg-text">{nodes}</div>
 }
 
-type FenceBlock = { kind: 'text'; content: string } | { kind: 'code'; lang: string; content: string }
+function CodeCard({ lang, content }: { lang: string; content: string }) {
+  return (
+    <div className="md-code">
+      <div className="md-code-head">
+        <span>{lang || 'code'}</span>
+      </div>
+      <pre>
+        <code>{content}</code>
+      </pre>
+    </div>
+  )
+}
+
+type FenceBlock =
+  | { kind: 'text'; content: string }
+  | { kind: 'code'; lang: string; content: string; closed: boolean }
 type MdBlock =
   | { kind: 'p'; lines: string[] }
   | { kind: 'h'; level: number; content: string }
@@ -70,12 +85,12 @@ function parseBlocks(text: string): FenceBlock[] {
       // fence still open — treat the rest of the buffer as code
       let body = text.slice(bodyStart)
       if (body.endsWith('\n')) body = body.slice(0, -1)
-      blocks.push({ kind: 'code', lang, content: body })
+      blocks.push({ kind: 'code', lang, content: body, closed: false })
       cursor = text.length
       fence.lastIndex = text.length
       break
     }
-    blocks.push({ kind: 'code', lang, content: text.slice(bodyStart, close) })
+    blocks.push({ kind: 'code', lang, content: text.slice(bodyStart, close), closed: true })
     cursor = close + 4
     fence.lastIndex = cursor
   }

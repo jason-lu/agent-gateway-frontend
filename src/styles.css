@@ -877,6 +877,27 @@ a {
   border: 1px solid var(--hairline);
 }
 
+/* mermaid diagrams */
+
+.md-mermaid {
+  margin: 10px 0;
+  padding: 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  overflow-x: auto;
+  text-align: center;
+}
+
+.md-mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.md-mermaid-pending {
+  min-height: 80px;
+}
+
 /* markdown blocks */
 
 .md-h {

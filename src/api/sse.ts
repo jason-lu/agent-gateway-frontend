@@ -1,4 +1,4 @@
-import { getToken } from './client'
+import { fetchWithAuth } from './client'
 
 export type SseEvent =
   | { type: 'delta'; text: string }
@@ -16,13 +16,11 @@ export async function streamChat(
   onEvent: (event: SseEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  const token = getToken()
-  const response = await fetch(`/api/v1/sessions/${sessionId}/messages/stream`, {
+  const response = await fetchWithAuth(`/api/v1/sessions/${sessionId}/messages/stream`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Accept: 'text/event-stream',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({ content }),
     signal,

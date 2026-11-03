@@ -9,6 +9,15 @@ export interface LoginResponse {
   token: string
   tokenType: string
   expiresIn: number
+  refreshToken: string
+}
+
+export interface RefreshRequest {
+  refreshToken: string
+}
+
+export interface LogoutRequest {
+  refreshToken: string
 }
 
 export interface ChangePasswordRequest {

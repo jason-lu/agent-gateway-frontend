@@ -7,6 +7,7 @@ import type {
   LoginRequest,
   LoginResponse,
   MessageResponse,
+  RefreshRequest,
   SessionResponse,
 } from './types'
 
@@ -21,6 +22,7 @@ export class ApiError extends Error {
 }
 
 const TOKEN_KEY = 'agent.token'
+const REFRESH_KEY = 'agent.refreshToken'
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
@@ -29,6 +31,21 @@ export function getToken(): string | null {
 export function setToken(token: string | null): void {
   if (token) localStorage.setItem(TOKEN_KEY, token)
   else localStorage.removeItem(TOKEN_KEY)
+}
+
+export function getRefreshToken(): string | null {
+  return localStorage.getItem(REFRESH_KEY)
+}
+
+export function setRefreshToken(token: string | null): void {
+  if (token) localStorage.setItem(REFRESH_KEY, token)
+  else localStorage.removeItem(REFRESH_KEY)
+}
+
+/** Drops both tokens — the caller decides whether the session is gone. */
+export function clearSession(): void {
+  setToken(null)
+  setRefreshToken(null)
 }
 
 async function parseError(response: Response): Promise<never> {
@@ -43,15 +60,68 @@ async function parseError(response: Response): Promise<never> {
   throw new ApiError(response.status, message)
 }
 
+/**
+ * Exchanges the refresh token for a new pair (rotation). Concurrent callers
+ * share one in-flight request; null means the session is gone.
+ */
+let refreshInFlight: Promise<string | null> | null = null
+
+export function refreshSession(): Promise<string | null> {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) return Promise.resolve(null)
+  if (!refreshInFlight) {
+    refreshInFlight = (async () => {
+      try {
+        const response = await fetch('/api/v1/auth/refresh', {
+          method: 'POST',
+          headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        })
+        if (!response.ok) {
+          clearSession()
+          return null
+        }
+        const body = (await response.json()) as LoginResponse
+        setToken(body.token)
+        setRefreshToken(body.refreshToken)
+        return body.token
+      } catch {
+        clearSession()
+        return null
+      } finally {
+        refreshInFlight = null
+      }
+    })()
+  }
+  return refreshInFlight
+}
+
+/**
+ * fetch with the bearer token attached; a 401 triggers one silent refresh and
+ * retry. Returns the final response as-is (including non-2xx).
+ */
+export async function fetchWithAuth(path: string, init: RequestInit = {}): Promise<Response> {
+  const headers = new Headers(init.headers)
+  const token = getToken()
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+
+  let response = await fetch(path, { ...init, headers })
+  if (response.status === 401 && getRefreshToken()) {
+    const renewed = await refreshSession()
+    if (renewed) {
+      headers.set('Authorization', `Bearer ${renewed}`)
+      response = await fetch(path, { ...init, headers })
+    }
+  }
+  return response
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
   headers.set('Accept', 'application/json')
   if (init.body) headers.set('Content-Type', 'application/json')
 
-  const token = getToken()
-  if (token) headers.set('Authorization', `Bearer ${token}`)
-
-  const response = await fetch(path, { ...init, headers })
+  const response = await fetchWithAuth(path, { ...init, headers })
   if (!response.ok) await parseError(response)
   if (response.status === 204) return undefined as T
   return (await response.json()) as T
@@ -62,6 +132,15 @@ export const api = {
 
   login: (body: LoginRequest) =>
     request<LoginResponse>('/api/v1/auth/login', { method: 'POST', body: JSON.stringify(body) }),
+
+  refresh: (body: RefreshRequest) =>
+    request<LoginResponse>('/api/v1/auth/refresh', { method: 'POST', body: JSON.stringify(body) }),
+
+  logout: (refreshToken: string) =>
+    request<void>('/api/v1/auth/logout', {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken }),
+    }),
 
   changePassword: (body: ChangePasswordRequest) =>
     request<void>('/api/v1/auth/change-password', { method: 'POST', body: JSON.stringify(body) }),

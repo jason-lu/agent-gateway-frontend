@@ -109,6 +109,9 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
       } else if (event.type === 'done') {
         acc = event.reply
         patchAssistant({ content: acc, streaming: false })
+      } else if (acc) {
+        // Mid-stream failure: keep the partial answer and mark why it stopped.
+        patchAssistant({ content: `${acc}\n\n> ⚠️ ${event.message}`, streaming: false })
       } else {
         patchAssistant({ content: event.message, streaming: false, error: true })
       }

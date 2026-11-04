@@ -205,10 +205,6 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
               disabled={loading}
             />
             <div className="composer-bar">
-              <span className="composer-hint">
-                {session.messageCount > 0 ? `${session.messageCount} 条历史` : '新会话'} ·{' '}
-                <span className="mono">{session.id.slice(0, 8)}</span>
-              </span>
               {sending ? (
                 <button className="btn btn-danger" onClick={stop}>
                   停止生成

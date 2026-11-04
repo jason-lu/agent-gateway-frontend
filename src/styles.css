@@ -1161,15 +1161,9 @@ a {
 .composer-bar {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
   margin-top: 8px;
-}
-
-.composer-hint {
-  flex: 1;
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--faint);
 }
 
 /* ---------- admin table ---------- */

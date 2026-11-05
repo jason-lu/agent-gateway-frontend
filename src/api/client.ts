@@ -157,10 +157,10 @@ export const api = {
 
   history: (id: string) => request<HistoryMessage[]>(`/api/v1/sessions/${id}/messages`),
 
-  send: (id: string, content: string) =>
+  send: (id: string, content: string, images?: string[]) =>
     request<MessageResponse>(`/api/v1/sessions/${id}/messages`, {
       method: 'POST',
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content, images }),
     }),
 
   adminUsers: () => request<AdminUserResponse[]>('/api/v1/admin/users'),

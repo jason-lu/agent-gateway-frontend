@@ -39,6 +39,8 @@ export interface CreateSessionRequest {
 export interface HistoryMessage {
   role: Role
   content: string
+  /** image URLs or data: URIs attached to the turn (vision input) */
+  images?: string[]
 }
 
 export interface MessageResponse {

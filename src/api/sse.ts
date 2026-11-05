@@ -13,6 +13,7 @@ export type SseEvent =
 export async function streamChat(
   sessionId: string,
   content: string,
+  images: string[] | undefined,
   onEvent: (event: SseEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
@@ -22,7 +23,7 @@ export async function streamChat(
       'Content-Type': 'application/json',
       Accept: 'text/event-stream',
     },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, images }),
     signal,
   })
 

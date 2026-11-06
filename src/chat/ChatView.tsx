@@ -3,6 +3,7 @@ import { api, ApiError } from '../api/client'
 import { streamChat, type SseEvent } from '../api/sse'
 import type { HistoryMessage, SessionResponse } from '../api/types'
 import { MessageContent } from './MessageContent'
+import { AuthImage } from './AuthImage'
 
 interface UiMessage {
   role: 'user' | 'assistant'
@@ -264,7 +265,7 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
                       {m.images?.length ? (
                         <div className="msg-images">
                           {m.images.map((src, j) => (
-                            <img className="msg-image" key={j} src={src} alt="" />
+                            <AuthImage className="msg-image" key={j} src={src} />
                           ))}
                         </div>
                       ) : null}

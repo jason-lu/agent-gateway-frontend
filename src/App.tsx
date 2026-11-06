@@ -178,7 +178,7 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
             {view === 'admin'
               ? '用户管理'
               : selected
-                ? titles[selected.id] || '新会话'
+                ? selected.title || titles[selected.id] || '新会话'
                 : '未选择会话'}
           </div>
           <div className="topbar-spacer" />

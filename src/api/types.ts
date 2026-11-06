@@ -28,6 +28,7 @@ export interface ChangePasswordRequest {
 export interface SessionResponse {
   id: string
   owner: string
+  title: string | null
   createdAt: string
   messageCount: number
 }

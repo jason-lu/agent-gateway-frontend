@@ -101,7 +101,7 @@ export function Sidebar({
               onClick={() => onSelect(s.id)}
             >
               <span className="session-row-main">
-                <span className="session-row-title">{titles[s.id] || formatDate(s.createdAt)}</span>
+                <span className="session-row-title">{s.title || titles[s.id] || formatDate(s.createdAt)}</span>
                 <span className="session-row-meta">
                   <span className="chip">{String(s.messageCount).padStart(2, '0')} msg</span>
                   <span>{formatTime(s.createdAt)}</span>

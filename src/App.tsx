@@ -3,11 +3,11 @@ import { api, ApiError } from './api/client'
 import type { HealthResponse, SessionResponse } from './api/types'
 import { AdminUsersPage } from './admin/AdminUsersPage'
 import { useAuth, useIsAdmin } from './auth/AuthContext'
-import { ChangePasswordDialog } from './auth/ChangePasswordDialog'
 import { LoginPage } from './auth/LoginPage'
 import { ChatView } from './chat/ChatView'
 import { Sidebar } from './layout/Sidebar'
 import { UserMenu } from './layout/UserMenu'
+import { SettingsDialog } from './settings/SettingsDialog'
 
 const SELECTED_KEY = 'agent.selectedSession'
 const TITLES_KEY = 'agent.sessionTitles'
@@ -25,7 +25,7 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
   const [selectedId, setSelectedId] = useState<string | null>(() => localStorage.getItem(SELECTED_KEY))
   const [view, setView] = useState<'chat' | 'admin'>('chat')
   const [health, setHealth] = useState<HealthResponse | null>(null)
-  const [showChangePassword, setShowChangePassword] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const [titles, setTitles] = useState<Record<string, string>>(() => {
     try {
       return JSON.parse(localStorage.getItem(TITLES_KEY) ?? '{}') as Record<string, string>
@@ -201,7 +201,7 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
           <UserMenu
             username={username}
             isAdmin={isAdmin}
-            onChangePassword={() => setShowChangePassword(true)}
+            onOpenSettings={() => setShowSettings(true)}
             onOpenAdmin={() => setView('admin')}
             onLogout={onLogout}
           />
@@ -231,7 +231,7 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
         )}
       </main>
 
-      {showChangePassword ? <ChangePasswordDialog onClose={() => setShowChangePassword(false)} /> : null}
+      {showSettings ? <SettingsDialog onClose={() => setShowSettings(false)} /> : null}
     </div>
   )
 }

@@ -59,6 +59,36 @@ export interface AdminUserResponse {
   roles: string[]
 }
 
+/** Secrets are masked server-side; the mask value means "keep what is stored". */
+export const SECRET_MASK = '••••••••'
+
+export type McpTransport = 'stdio' | 'http'
+
+export type McpServerStatus = 'connected' | 'disconnected' | 'disabled' | 'unknown'
+
+export interface McpServerResponse {
+  name: string
+  transport: McpTransport
+  command: string | null
+  args: string[]
+  env: Record<string, string>
+  url: string | null
+  headers: Record<string, string>
+  enabled: boolean
+  status: McpServerStatus
+}
+
+export interface McpServerRequest {
+  name: string
+  transport: McpTransport
+  command?: string | null
+  args?: string[]
+  env?: Record<string, string>
+  url?: string | null
+  headers?: Record<string, string>
+  enabled: boolean
+}
+
 export interface ErrorResponse {
   status: number
   error: string

@@ -3,13 +3,13 @@ import { useEffect, useRef, useState } from 'react'
 interface UserMenuProps {
   username: string
   isAdmin: boolean
-  onChangePassword: () => void
+  onOpenSettings: () => void
   onOpenAdmin: () => void
   onLogout: () => void
 }
 
 /** Top-right avatar: click opens a menu with the account actions. */
-export function UserMenu({ username, isAdmin, onChangePassword, onOpenAdmin, onLogout }: UserMenuProps) {
+export function UserMenu({ username, isAdmin, onOpenSettings, onOpenAdmin, onLogout }: UserMenuProps) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
   const initial = username.slice(0, 1).toUpperCase()
@@ -65,8 +65,8 @@ export function UserMenu({ username, isAdmin, onChangePassword, onOpenAdmin, onL
               用户管理
             </button>
           ) : null}
-          <button className="user-menu-item" role="menuitem" onClick={act(onChangePassword)}>
-            修改密码
+          <button className="user-menu-item" role="menuitem" onClick={act(onOpenSettings)}>
+            设置
           </button>
 
           <div className="user-menu-sep" />

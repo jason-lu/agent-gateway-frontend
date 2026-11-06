@@ -6,6 +6,8 @@ import type {
   HistoryMessage,
   LoginRequest,
   LoginResponse,
+  McpServerRequest,
+  McpServerResponse,
   MessageResponse,
   RefreshRequest,
   SessionResponse,
@@ -164,4 +166,21 @@ export const api = {
     }),
 
   adminUsers: () => request<AdminUserResponse[]>('/api/v1/admin/users'),
+
+  listMcpServers: () => request<McpServerResponse[]>('/api/v1/settings/mcp-servers'),
+
+  createMcpServer: (body: McpServerRequest) =>
+    request<McpServerResponse>('/api/v1/settings/mcp-servers', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  updateMcpServer: (name: string, body: McpServerRequest) =>
+    request<McpServerResponse>(`/api/v1/settings/mcp-servers/${encodeURIComponent(name)}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
+  deleteMcpServer: (name: string) =>
+    request<void>(`/api/v1/settings/mcp-servers/${encodeURIComponent(name)}`, { method: 'DELETE' }),
 }

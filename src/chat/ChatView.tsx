@@ -93,6 +93,14 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
     if (el) el.scrollTop = el.scrollHeight
   }, [messages])
 
+  // Grow the composer with the draft so multi-line input stays visible.
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [input])
+
   const stop = useCallback(() => {
     abortRef.current?.abort()
     abortRef.current = null
@@ -317,23 +325,63 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
             <div className="composer-bar">
               <button
                 type="button"
-                className="btn btn-ghost"
+                className="btn btn-ghost composer-icon-btn"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={loading || sending}
+                aria-label="添加图片"
+                title="添加图片"
               >
-                添加图片
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
               </button>
               {sending ? (
-                <button className="btn btn-danger" onClick={stop}>
-                  停止生成
+                <button
+                  className="btn btn-danger composer-send"
+                  onClick={stop}
+                  aria-label="停止生成"
+                  title="停止生成"
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <rect x="6" y="6" width="12" height="12" rx="2" />
+                  </svg>
                 </button>
               ) : (
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-primary composer-send"
                   onClick={() => void send()}
                   disabled={loading || (!input.trim() && attachments.length === 0)}
+                  aria-label="发送"
+                  title="发送"
                 >
-                  发送
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 19V5M5 12l7-7 7 7" />
+                  </svg>
                 </button>
               )}
             </div>

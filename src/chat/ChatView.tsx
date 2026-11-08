@@ -170,6 +170,9 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
     abortRef.current = controller
 
     let acc = ''
+    // A done/error event carries the verdict for the turn; the post-stream patch
+    // must not overwrite it with a bare accumulator afterwards.
+    let settled = false
     const patchAssistant = (patch: Partial<UiMessage>) =>
       setMessages((prev) => {
         const next = [...prev]
@@ -187,30 +190,37 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
         acc += event.text
         patchAssistant({ content: acc })
       } else if (event.type === 'done') {
+        settled = true
         acc = event.reply
         patchAssistant({ content: acc, streaming: false })
-      } else if (acc) {
-        // Mid-stream failure: keep the partial answer and mark why it stopped.
-        patchAssistant({ content: `${acc}\n\n> ⚠️ ${event.message}`, streaming: false })
       } else {
-        patchAssistant({ content: event.message, streaming: false, error: true })
+        settled = true
+        // Always surface the failure: a partial answer says why it stopped; with
+        // no answer at all the error itself replaces the blank bubble.
+        patchAssistant(
+          acc
+            ? { content: `${acc}\n\n> ⚠️ ${event.message}`, streaming: false }
+            : { content: `请求失败：${event.message}`, streaming: false, error: true },
+        )
       }
     }
 
     try {
       await streamChat(session.id, content, images.length ? images : undefined, handleEvent, controller.signal)
-      // Stream ended without an explicit `done` — keep whatever we accumulated.
-      patchAssistant({ streaming: false, content: acc })
+      // Stream ended without a done/error event — keep whatever we accumulated.
+      if (!settled) {
+        patchAssistant({ streaming: false, content: acc || '（连接中断，未收到回复）', error: !acc })
+      }
       onMessageCount(session.id, messages.length + 2)
     } catch (err) {
       if (controller.signal.aborted) {
         patchAssistant({ streaming: false, content: acc || '（已停止生成）' })
       } else if (acc) {
-        // Connection dropped mid-stream: keep what already rendered.
-        patchAssistant({ content: acc, streaming: false })
+        // Connection dropped mid-stream: keep what already rendered, say why it stopped.
+        patchAssistant({ content: `${acc}\n\n> ⚠️ 连接中断，回答可能不完整`, streaming: false })
       } else {
         const message = err instanceof Error ? err.message : '发送失败'
-        patchAssistant({ content: message, streaming: false, error: true })
+        patchAssistant({ content: `请求失败：${message}`, streaming: false, error: true })
       }
     } finally {
       abortRef.current = null

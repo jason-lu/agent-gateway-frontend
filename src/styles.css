@@ -1441,6 +1441,66 @@ a {
   font-size: 13.5px;
 }
 
+.admin h2 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.admin-users {
+  margin-top: 34px;
+}
+
+.llm-settings {
+  margin-top: 8px;
+}
+
+.llm-settings .admin-sub {
+  margin-bottom: 14px;
+}
+
+.llm-effective {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 10px 12px;
+  margin-bottom: 18px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface-sunk);
+  font-size: 12px;
+}
+
+.llm-effective-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.llm-effective-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.llm-clear-key {
+  margin-top: 6px;
+  height: 26px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.llm-clear-note {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .table {
   width: 100%;
   border: 1px solid var(--hairline);

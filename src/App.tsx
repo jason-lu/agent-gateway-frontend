@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, ApiError } from './api/client'
 import type { HealthResponse, SessionResponse } from './api/types'
-import { AdminUsersPage } from './admin/AdminUsersPage'
+import { AdminPage } from './admin/AdminPage'
 import { useAuth, useIsAdmin } from './auth/AuthContext'
 import { LoginPage } from './auth/LoginPage'
 import { ChatView } from './chat/ChatView'
@@ -176,7 +176,7 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
         <div className="topbar">
           <div className="topbar-title">
             {view === 'admin'
-              ? '用户管理'
+              ? '管理'
               : selected
                 ? selected.title || titles[selected.id] || '新会话'
                 : '未选择会话'}
@@ -194,7 +194,7 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
                 className={view === 'admin' ? 'active' : ''}
                 onClick={() => setView('admin')}
               >
-                用户
+                管理
               </button>
             </div>
           ) : null}
@@ -208,7 +208,7 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
         </div>
 
         {view === 'admin' ? (
-          <AdminUsersPage />
+          <AdminPage />
         ) : selected ? (
           <ChatView
             key={selected.id}

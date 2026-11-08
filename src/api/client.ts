@@ -1,4 +1,6 @@
 import type {
+  AdminLlmSettingsRequest,
+  AdminLlmSettingsResponse,
   AdminUserResponse,
   ChangePasswordRequest,
   CreateSessionRequest,
@@ -166,6 +168,17 @@ export const api = {
     }),
 
   adminUsers: () => request<AdminUserResponse[]>('/api/v1/admin/users'),
+
+  adminLlmSettings: () => request<AdminLlmSettingsResponse>('/api/v1/admin/llm-settings'),
+
+  updateAdminLlmSettings: (body: AdminLlmSettingsRequest) =>
+    request<AdminLlmSettingsResponse>('/api/v1/admin/llm-settings', {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
+  resetAdminLlmSettings: () =>
+    request<void>('/api/v1/admin/llm-settings', { method: 'DELETE' }),
 
   listMcpServers: () => request<McpServerResponse[]>('/api/v1/settings/mcp-servers'),
 

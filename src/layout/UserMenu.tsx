@@ -62,7 +62,7 @@ export function UserMenu({ username, isAdmin, onOpenSettings, onOpenAdmin, onLog
 
           {isAdmin ? (
             <button className="user-menu-item" role="menuitem" onClick={act(onOpenAdmin)}>
-              用户管理
+              管理
             </button>
           ) : null}
           <button className="user-menu-item" role="menuitem" onClick={act(onOpenSettings)}>

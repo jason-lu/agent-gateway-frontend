@@ -59,6 +59,33 @@ export interface AdminUserResponse {
   roles: string[]
 }
 
+/** Where an effective LLM field comes from: admin overrides, the environment, or nowhere. */
+export type LlmSettingsSource = 'admin' | 'env' | 'none'
+
+export interface AdminLlmSettingsResponse {
+  /** Admin override, or null when the field falls back to the environment. */
+  baseUrl: string | null
+  /** Masked with SECRET_MASK when an admin key is stored; never the real key. */
+  apiKey: string | null
+  model: string | null
+  effectiveBaseUrl: string | null
+  effectiveModel: string | null
+  baseUrlSource: LlmSettingsSource
+  apiKeySource: LlmSettingsSource
+  modelSource: LlmSettingsSource
+  configured: boolean
+}
+
+/**
+ * Per field: null keeps the stored override, '' clears it (falls back to the
+ * environment), a value replaces it. SECRET_MASK on apiKey keeps the stored key.
+ */
+export interface AdminLlmSettingsRequest {
+  baseUrl?: string | null
+  apiKey?: string | null
+  model?: string | null
+}
+
 /** Secrets are masked server-side; the mask value means "keep what is stored". */
 export const SECRET_MASK = '••••••••'
 

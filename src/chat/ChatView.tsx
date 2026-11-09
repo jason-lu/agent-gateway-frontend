@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, ApiError } from '../api/client'
 import { streamChat, type SseEvent } from '../api/sse'
-import type { HistoryMessage, SessionResponse } from '../api/types'
+import type { HistoryMessage, LlmModelChoice, SessionResponse } from '../api/types'
 import { MessageContent } from './MessageContent'
 import { AuthImage } from './AuthImage'
 
@@ -39,10 +39,36 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
   const [input, setInput] = useState('')
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [sending, setSending] = useState(false)
+  const [models, setModels] = useState<{ option: LlmModelChoice; label: string }[] | null>(null)
+  const [choice, setChoice] = useState<LlmModelChoice | null>(null)
+  const [modelError, setModelError] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // The model picker: what the deployment offers plus this account's saved choice.
+  useEffect(() => {
+    let cancelled = false
+    api
+      .llmModelCatalog()
+      .then((catalog) => {
+        if (cancelled) return
+        setModels(
+          catalog.models.map((option) => ({
+            option: { providerId: option.providerId, model: option.model },
+            label: `${option.providerName} / ${option.model}`,
+          })),
+        )
+        setChoice(catalog.selected ?? catalog.defaultChoice ?? null)
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setModelError(err instanceof Error ? `模型列表加载失败：${err.message}` : '模型列表加载失败')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // Reload history whenever the selected session changes.
   useEffect(() => {
@@ -206,7 +232,15 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
     }
 
     try {
-      await streamChat(session.id, content, images.length ? images : undefined, handleEvent, controller.signal)
+      await streamChat(
+        session.id,
+        content,
+        images.length ? images : undefined,
+        choice?.providerId,
+        choice?.model,
+        handleEvent,
+        controller.signal,
+      )
       // Stream ended without a done/error event — keep whatever we accumulated.
       if (!settled) {
         patchAssistant({ streaming: false, content: acc || '（连接中断，未收到回复）', error: !acc })
@@ -227,13 +261,24 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
       setSending(false)
       textareaRef.current?.focus()
     }
-  }, [input, attachments, sending, session.id, messages.length, onMessageCount])
+  }, [input, attachments, sending, session.id, messages.length, onMessageCount, choice])
 
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault()
       void send()
     }
+  }
+
+  /** Remembers the picked model server-side so it follows the account. */
+  function onModelChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const picked = models?.find((entry) => optionKey(entry.option) === e.target.value)
+    if (!picked) return
+    setChoice(picked.option)
+    setModelError(null)
+    api.setMyLlmModel(picked.option).catch((err: unknown) => {
+      setModelError(err instanceof Error ? `模型选择未保存：${err.message}` : '模型选择未保存')
+    })
   }
 
   function onPaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
@@ -304,6 +349,11 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
               {loadError}
             </div>
           ) : null}
+          {modelError ? (
+            <div className="error-banner" style={{ marginBottom: 10 }}>
+              {modelError}
+            </div>
+          ) : null}
           <div className="composer-box">
             {attachments.length > 0 ? (
               <div className="composer-attachments">
@@ -333,27 +383,45 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
               disabled={loading}
             />
             <div className="composer-bar">
-              <button
-                type="button"
-                className="btn btn-ghost composer-icon-btn"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={loading || sending}
-                aria-label="添加图片"
-                title="添加图片"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  aria-hidden="true"
+              <div className="composer-bar-left">
+                <button
+                  type="button"
+                  className="btn btn-ghost composer-icon-btn"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={loading || sending}
+                  aria-label="添加图片"
+                  title="添加图片"
                 >
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-              </button>
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </button>
+                {models && models.length > 0 && choice ? (
+                  <select
+                    className="input model-picker"
+                    aria-label="选择模型"
+                    title="选择模型"
+                    value={optionKey(choice)}
+                    onChange={onModelChange}
+                    disabled={loading || sending}
+                  >
+                    {models.map((entry) => (
+                      <option key={optionKey(entry.option)} value={optionKey(entry.option)}>
+                        {entry.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
+              </div>
               {sending ? (
                 <button
                   className="btn btn-danger composer-send"
@@ -416,4 +484,9 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
 /** Shared 401 handler: an expired token should drop the user back to login. */
 export function isUnauthorized(err: unknown): boolean {
   return err instanceof ApiError && err.status === 401
+}
+
+/** Composite key for the model picker; the pair is what identifies a choice. */
+function optionKey(choice: LlmModelChoice): string {
+  return `${choice.providerId}|${choice.model}`
 }

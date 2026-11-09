@@ -59,45 +59,67 @@ export interface AdminUserResponse {
   roles: string[]
 }
 
-/** Where an effective LLM field comes from: admin overrides, the environment, or nowhere. */
-export type LlmSettingsSource = 'admin' | 'env' | 'none'
-
-export interface AdminLlmSettingsResponse {
-  /** Admin override, or null when the field falls back to the environment. */
-  baseUrl: string | null
-  /** Masked with SECRET_MASK when an admin key is stored; never the real key. */
+/** One admin-configured LLM provider: a connection plus the model IDs it offers. */
+export interface LlmProviderResponse {
+  id: string
+  name: string
+  baseUrl: string
+  /** Masked with SECRET_MASK — the real key never leaves the server. */
   apiKey: string | null
-  model: string | null
-  effectiveBaseUrl: string | null
-  effectiveModel: string | null
-  baseUrlSource: LlmSettingsSource
-  apiKeySource: LlmSettingsSource
-  modelSource: LlmSettingsSource
-  configured: boolean
+  models: string[]
+  defaultModel: string
+  /** The deployment default: at least one provider always holds it and it cannot be deleted. */
+  primary: boolean
 }
 
 /**
- * Per field: null keeps the stored override, '' clears it (falls back to the
- * environment), a value replaces it. SECRET_MASK on apiKey keeps the stored key.
+ * Create/update body for a provider. On update, a blank (or SECRET_MASK) apiKey
+ * keeps the stored key; create needs a real key.
  */
-export interface AdminLlmSettingsRequest {
-  baseUrl?: string | null
+export interface LlmProviderRequest {
+  name: string
+  baseUrl: string
   apiKey?: string | null
-  model?: string | null
+  models: string[]
+  defaultModel: string
 }
 
 /**
- * Draft connection for a model probe. Same per-field semantics as
- * AdminLlmSettingsRequest; the model name is what the probe helps choose.
+ * Draft connection for a model probe. {@code id} anchors the merge to a stored
+ * provider so a blank field (or SECRET_MASK on the key) keeps its stored value.
  */
-export interface AdminLlmModelsRequest {
+export interface LlmProviderProbeRequest {
+  id?: string | null
   baseUrl?: string | null
   apiKey?: string | null
 }
 
-/** Model IDs detected on the upstream (OpenAI-compatible GET /models). */
+/** Model IDs detected on the probed upstream (OpenAI-compatible GET /models). */
 export interface AdminLlmModelsResponse {
   models: string[]
+}
+
+/** One pickable model in the chat window: which provider offers it and under what name. */
+export interface LlmModelOption {
+  providerId: string
+  providerName: string
+  model: string
+}
+
+/** A concrete (provider, model) choice — what a user picks and what a turn uses. */
+export interface LlmModelChoice {
+  providerId: string
+  model: string
+}
+
+/**
+ * The chat-window model picker: every pair on offer, the deployment default, and
+ * the caller's effective selection (their saved choice, else the default).
+ */
+export interface LlmModelCatalog {
+  models: LlmModelOption[]
+  defaultChoice: LlmModelChoice | null
+  selected: LlmModelChoice | null
 }
 
 /** Secrets are masked server-side; the mask value means "keep what is stored". */

@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import type { AdminUserResponse } from '../api/types'
-import { AdminLlmSettingsSection } from './AdminLlmSettingsSection'
+import { AdminLlmProvidersSection } from './AdminLlmProvidersSection'
 
-/** The admin console: deployment-level LLM upstream settings plus the account list. */
+/** The admin console: deployment-level LLM providers plus the account list. */
 export function AdminPage() {
   return (
     <div className="admin">
       <div className="admin-inner">
         <h1>管理</h1>
-        <AdminLlmSettingsSection />
+        <AdminLlmProvidersSection />
         <UsersSection />
       </div>
     </div>

@@ -9,11 +9,16 @@ export type SseEvent =
  * The gateway streams chat over a POST with a JSON body, so the browser's native
  * EventSource (GET only) cannot be used. Read the response body as a stream and
  * parse the SSE framing by hand.
+ *
+ * {@code providerId} / {@code model} name the model the chat window picked; the
+ * server falls back to the saved choice and then the default when absent or stale.
  */
 export async function streamChat(
   sessionId: string,
   content: string,
   images: string[] | undefined,
+  providerId: string | undefined,
+  model: string | undefined,
   onEvent: (event: SseEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
@@ -23,7 +28,7 @@ export async function streamChat(
       'Content-Type': 'application/json',
       Accept: 'text/event-stream',
     },
-    body: JSON.stringify({ content, images }),
+    body: JSON.stringify({ content, images, providerId, model }),
     signal,
   })
 

@@ -1385,6 +1385,20 @@ a {
   margin-top: 8px;
 }
 
+.composer-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.model-picker {
+  max-width: 240px;
+  height: 32px;
+  padding: 0 8px;
+  font-size: 12px;
+}
+
 .composer-icon-btn {
   width: 32px;
   height: 32px;
@@ -1509,38 +1523,13 @@ a {
   margin-bottom: 14px;
 }
 
-.llm-effective {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 14px;
-  padding: 10px 12px;
-  margin-bottom: 18px;
+.llm-model-chip {
+  flex: 1;
+  padding: 6px 10px;
   border: 1px solid var(--hairline);
   border-radius: var(--r-md);
-  background: var(--surface-sunk);
-  font-size: 12px;
-}
-
-.llm-effective-label {
+  background: var(--surface);
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-
-.llm-effective-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--muted);
-}
-
-.llm-clear-key {
-  margin-top: 6px;
-  height: 26px;
-  padding: 0 10px;
   font-size: 12px;
 }
 

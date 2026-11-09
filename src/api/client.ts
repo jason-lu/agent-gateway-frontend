@@ -1,8 +1,5 @@
 import type {
-  AdminLlmModelsRequest,
   AdminLlmModelsResponse,
-  AdminLlmSettingsRequest,
-  AdminLlmSettingsResponse,
   AdminUserResponse,
   ChangePasswordRequest,
   CreateSessionRequest,
@@ -10,6 +7,11 @@ import type {
   HistoryMessage,
   LoginRequest,
   LoginResponse,
+  LlmModelCatalog,
+  LlmModelChoice,
+  LlmProviderProbeRequest,
+  LlmProviderRequest,
+  LlmProviderResponse,
   McpServerRequest,
   McpServerResponse,
   MessageResponse,
@@ -171,23 +173,42 @@ export const api = {
 
   adminUsers: () => request<AdminUserResponse[]>('/api/v1/admin/users'),
 
-  adminLlmSettings: () => request<AdminLlmSettingsResponse>('/api/v1/admin/llm-settings'),
+  adminLlmProviders: () => request<LlmProviderResponse[]>('/api/v1/admin/llm-providers'),
 
-  updateAdminLlmSettings: (body: AdminLlmSettingsRequest) =>
-    request<AdminLlmSettingsResponse>('/api/v1/admin/llm-settings', {
-      method: 'PUT',
-      body: JSON.stringify(body),
-    }),
-
-  /** Probes the upstream for its model IDs; the body is the draft connection in the form. */
-  listAdminLlmModels: (body: AdminLlmModelsRequest = {}) =>
-    request<AdminLlmModelsResponse>('/api/v1/admin/llm-settings/models', {
+  createAdminLlmProvider: (body: LlmProviderRequest) =>
+    request<LlmProviderResponse>('/api/v1/admin/llm-providers', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
 
-  resetAdminLlmSettings: () =>
-    request<void>('/api/v1/admin/llm-settings', { method: 'DELETE' }),
+  updateAdminLlmProvider: (id: string, body: LlmProviderRequest) =>
+    request<LlmProviderResponse>(`/api/v1/admin/llm-providers/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
+  deleteAdminLlmProvider: (id: string) =>
+    request<void>(`/api/v1/admin/llm-providers/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  /** Moves the deployment default to this provider (which releases the old one for deletion). */
+  promoteAdminLlmProvider: (id: string) =>
+    request<LlmProviderResponse>(`/api/v1/admin/llm-providers/${encodeURIComponent(id)}/primary`, {
+      method: 'POST',
+    }),
+
+  /** Probes the upstream for its model IDs; the body is the draft connection in the form. */
+  listAdminLlmModels: (body: LlmProviderProbeRequest = {}) =>
+    request<AdminLlmModelsResponse>('/api/v1/admin/llm-providers/models', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  /** What the chat window can pick, plus the caller's current selection. */
+  llmModelCatalog: () => request<LlmModelCatalog>('/api/v1/llm/models'),
+
+  /** Saves the model the caller picked in the chat window. */
+  setMyLlmModel: (body: LlmModelChoice) =>
+    request<LlmModelChoice>('/api/v1/llm/model', { method: 'PUT', body: JSON.stringify(body) }),
 
   listMcpServers: () => request<McpServerResponse[]>('/api/v1/settings/mcp-servers'),
 

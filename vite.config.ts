@@ -22,5 +22,9 @@ export default defineConfig({
     outDir: webStatic,
     emptyOutDir: true,
     assetsDir: 'assets',
+    // Mermaid (lazy via import('mermaid')) ships vendor chunks well over the 500 kB
+    // default — the biggest, elk, is ~1.5 MB. They load only when a diagram renders,
+    // so the limit is raised to keep the signal meaningful for real app chunks.
+    chunkSizeWarningLimit: 2000,
   },
 })

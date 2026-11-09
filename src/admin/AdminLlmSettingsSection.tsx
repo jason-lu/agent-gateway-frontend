@@ -20,9 +20,33 @@ export function AdminLlmSettingsSection() {
   const [apiKey, setApiKey] = useState('')
   const [model, setModel] = useState('')
   const [clearKey, setClearKey] = useState(false)
+  const [models, setModels] = useState<string[] | null>(null)
+  const [detecting, setDetecting] = useState(false)
+  const [modelHint, setModelHint] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [resetArmed, setResetArmed] = useState(false)
+
+  /**
+   * Asks the upstream for its model IDs using the given connection values, so the
+   * model field can offer them in a dropdown instead of requiring manual entry.
+   */
+  const detectModels = useCallback(async (base: string, key: string) => {
+    setDetecting(true)
+    setModelHint(null)
+    try {
+      const data = await api.listAdminLlmModels({ baseUrl: base, apiKey: key })
+      setModels(data.models)
+      if (data.models.length === 0) {
+        setModelHint('上游未返回模型列表，请手动输入模型名称')
+      }
+    } catch (err) {
+      setModels(null)
+      setModelHint(err instanceof Error ? `无法获取模型列表：${err.message}` : '无法获取模型列表')
+    } finally {
+      setDetecting(false)
+    }
+  }, [])
 
   const reload = useCallback(async () => {
     try {
@@ -33,30 +57,37 @@ export function AdminLlmSettingsSection() {
       setApiKey('')
       setClearKey(false)
       setError(null)
+      void detectModels(data.baseUrl ?? '', data.apiKey ?? '')
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载失败')
     }
-  }, [])
+  }, [detectModels])
 
   useEffect(() => {
     void reload()
   }, [reload])
 
+  /** The connection the form holds right now, resolved exactly like save() sends it. */
+  function draftConnection(): { baseUrl: string; apiKey: string } {
+    return {
+      baseUrl: baseUrl.trim(),
+      // Blank with a stored key round-trips the mask ("keep"); typed text replaces.
+      apiKey: clearKey ? '' : apiKey === '' && settings?.apiKey ? SECRET_MASK : apiKey.trim(),
+    }
+  }
+
   async function save() {
     setSaving(true)
     setError(null)
     try {
-      const updated = await api.updateAdminLlmSettings({
-        baseUrl: baseUrl.trim(),
-        model: model.trim(),
-        // Blank with a stored key round-trips the mask ("keep"); typed text replaces.
-        apiKey: clearKey ? '' : apiKey === '' && settings?.apiKey ? SECRET_MASK : apiKey.trim(),
-      })
+      const draft = draftConnection()
+      const updated = await api.updateAdminLlmSettings({ ...draft, model: model.trim() })
       setSettings(updated)
       setBaseUrl(updated.baseUrl ?? '')
       setModel(updated.model ?? '')
       setApiKey('')
       setClearKey(false)
+      void detectModels(updated.baseUrl ?? '', updated.apiKey ?? '')
     } catch (err) {
       setError(err instanceof ApiError || err instanceof Error ? err.message : '保存失败')
     } finally {
@@ -77,6 +108,16 @@ export function AdminLlmSettingsSection() {
       setSaving(false)
     }
   }
+
+  const trimmedModel = model.trim()
+  // Dropdown only when detection returned models; the current value stays selectable
+  // even if the upstream no longer lists it. Otherwise fall back to manual entry.
+  const modelOptions =
+    models && models.length > 0
+      ? trimmedModel && !models.includes(trimmedModel)
+        ? [trimmedModel, ...models]
+        : models
+      : null
 
   return (
     <section className="llm-settings">
@@ -154,14 +195,42 @@ export function AdminLlmSettingsSection() {
         <label className="field-label" htmlFor="llm-model">
           模型名称
         </label>
-        <input
-          id="llm-model"
-          className="input"
-          type="text"
-          placeholder="留空则使用环境变量"
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-        />
+        {modelOptions ? (
+          <select
+            id="llm-model"
+            className="input"
+            value={trimmedModel}
+            onChange={(e) => setModel(e.target.value)}
+          >
+            <option value="">留空则使用环境变量</option>
+            {modelOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            id="llm-model"
+            className="input"
+            type="text"
+            placeholder="留空则使用环境变量"
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+          />
+        )}
+        <button
+          className="btn btn-ghost llm-clear-key"
+          onClick={() => {
+            const draft = draftConnection()
+            void detectModels(draft.baseUrl, draft.apiKey)
+          }}
+          disabled={detecting}
+        >
+          {detecting ? <span className="spinner" /> : null}
+          {modelOptions ? '重新检测可用模型' : '检测可用模型'}
+        </button>
+        {modelHint ? <div className="llm-clear-note">{modelHint}</div> : null}
       </div>
 
       <div className="dialog-actions">

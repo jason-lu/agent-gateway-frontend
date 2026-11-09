@@ -86,6 +86,20 @@ export interface AdminLlmSettingsRequest {
   model?: string | null
 }
 
+/**
+ * Draft connection for a model probe. Same per-field semantics as
+ * AdminLlmSettingsRequest; the model name is what the probe helps choose.
+ */
+export interface AdminLlmModelsRequest {
+  baseUrl?: string | null
+  apiKey?: string | null
+}
+
+/** Model IDs detected on the upstream (OpenAI-compatible GET /models). */
+export interface AdminLlmModelsResponse {
+  models: string[]
+}
+
 /** Secrets are masked server-side; the mask value means "keep what is stored". */
 export const SECRET_MASK = '••••••••'
 

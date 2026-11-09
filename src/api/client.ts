@@ -1,4 +1,6 @@
 import type {
+  AdminLlmModelsRequest,
+  AdminLlmModelsResponse,
   AdminLlmSettingsRequest,
   AdminLlmSettingsResponse,
   AdminUserResponse,
@@ -174,6 +176,13 @@ export const api = {
   updateAdminLlmSettings: (body: AdminLlmSettingsRequest) =>
     request<AdminLlmSettingsResponse>('/api/v1/admin/llm-settings', {
       method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
+  /** Probes the upstream for its model IDs; the body is the draft connection in the form. */
+  listAdminLlmModels: (body: AdminLlmModelsRequest = {}) =>
+    request<AdminLlmModelsResponse>('/api/v1/admin/llm-settings/models', {
+      method: 'POST',
       body: JSON.stringify(body),
     }),
 

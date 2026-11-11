@@ -955,6 +955,23 @@ a {
   background: var(--surface);
 }
 
+.topbar-menu {
+  display: none;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+}
+
+.topbar-menu:hover {
+  background: var(--surface-sunk);
+  color: var(--ink);
+}
+
 .topbar-title {
   font-size: 14px;
   font-weight: 600;
@@ -1617,7 +1634,41 @@ a {
     grid-template-columns: 1fr;
   }
 
+  /* Sidebar becomes an off-canvas drawer so "new session" stays reachable. */
   .sidebar {
-    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(84vw, 320px);
+    z-index: 40;
+    transform: translateX(-102%);
+    transition: transform 0.22s ease;
+  }
+
+  .shell.sidebar-open .sidebar {
+    transform: translateX(0);
+    box-shadow: 8px 0 24px rgba(23, 21, 15, 0.14);
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    background: rgba(23, 21, 15, 0.32);
+  }
+
+  .topbar-menu {
+    display: grid;
+  }
+
+  .topbar {
+    padding: 0 12px;
+    gap: 10px;
+  }
+
+  /* Hover-revealed actions are unreachable on touch — keep delete visible. */
+  .session-row-delete {
+    opacity: 1;
   }
 }

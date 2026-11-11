@@ -26,6 +26,7 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
   const [view, setView] = useState<'chat' | 'admin'>('chat')
   const [health, setHealth] = useState<HealthResponse | null>(null)
   const [showSettings, setShowSettings] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const [titles, setTitles] = useState<Record<string, string>>(() => {
     try {
       return JSON.parse(localStorage.getItem(TITLES_KEY) ?? '{}') as Record<string, string>
@@ -160,20 +161,44 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
   }, [])
 
   return (
-    <div className="shell">
+    <div className={`shell${sidebarOpen ? ' sidebar-open' : ''}`}>
+      {sidebarOpen ? (
+        <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+      ) : null}
       <Sidebar
         sessions={sessions}
         selectedId={view === 'chat' ? selectedId : null}
         titles={titles}
         health={health}
         busy={loading}
-        onSelect={handleSelect}
-        onCreate={handleCreate}
+        onSelect={(id) => {
+          handleSelect(id)
+          setSidebarOpen(false)
+        }}
+        onCreate={async (systemPrompt) => {
+          await handleCreate(systemPrompt)
+          setSidebarOpen(false)
+        }}
         onDelete={handleDelete}
       />
 
       <main className="main">
         <div className="topbar">
+          <button
+            className="topbar-menu"
+            aria-label={sidebarOpen ? '关闭会话列表' : '打开会话列表'}
+            onClick={() => setSidebarOpen((v) => !v)}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                d="M2 4h12M2 8h12M2 12h12"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                fill="none"
+              />
+            </svg>
+          </button>
           <div className="topbar-title">
             {view === 'admin'
               ? '管理'
@@ -224,7 +249,7 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
               </div>
               <div style={{ fontWeight: 600, marginBottom: 6 }}>还没有会话</div>
               <div style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.7 }}>
-                在左侧点击「新建会话」创建一个对话，然后在这里开始聊天。
+                打开会话列表，点击「新建会话」创建一个对话，然后在这里开始聊天。
               </div>
             </div>
           </div>

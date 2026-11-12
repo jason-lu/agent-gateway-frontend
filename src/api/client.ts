@@ -15,6 +15,7 @@ import type {
   McpServerRequest,
   McpServerResponse,
   MessageResponse,
+  RawMessage,
   RefreshRequest,
   SessionResponse,
 } from './types'
@@ -164,6 +165,9 @@ export const api = {
     request<void>(`/api/v1/sessions/${id}`, { method: 'DELETE' }),
 
   history: (id: string) => request<HistoryMessage[]>(`/api/v1/sessions/${id}/messages`),
+
+  /** Unfiltered message log (system prompts, summaries, tool traffic) for debug export. */
+  rawHistory: (id: string) => request<RawMessage[]>(`/api/v1/sessions/${id}/messages/raw`),
 
   send: (id: string, content: string, images?: string[]) =>
     request<MessageResponse>(`/api/v1/sessions/${id}/messages`, {

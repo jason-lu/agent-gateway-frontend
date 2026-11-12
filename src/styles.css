@@ -913,6 +913,54 @@ a {
   color: var(--danger);
 }
 
+.user-menu-item:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.user-menu-item:disabled:hover {
+  background: transparent;
+  color: var(--ink-soft);
+}
+
+/* export menu (topbar, next to the account menu) */
+
+.export-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.export-menu-trigger:hover:not(:disabled),
+.export-menu-trigger[aria-expanded='true'] {
+  background: var(--surface-sunk);
+  color: var(--ink);
+}
+
+.export-menu-trigger:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.export-menu-note {
+  padding: 6px 8px;
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.export-menu-note.error {
+  color: var(--danger);
+}
+
 /* new-session inline panel */
 
 .new-session {

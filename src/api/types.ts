@@ -44,6 +44,27 @@ export interface HistoryMessage {
   images?: string[]
 }
 
+/** One tool call on an assistant turn, as stored (`tool_calls[]` entry). */
+export interface ToolCall {
+  id: string
+  name: string
+  arguments: string
+}
+
+/**
+ * One stored turn in raw form for debug exports: every role including system
+ * prompts, memory-compression summaries (their content carries the summary
+ * marker), and tool traffic. Images are as stored — `ref:<sessionId>/<imageId>`
+ * for externalised pixels, untouched data URIs otherwise.
+ */
+export interface RawMessage {
+  role: 'system' | 'user' | 'assistant' | 'tool'
+  content: string
+  toolCallId?: string | null
+  toolCalls?: ToolCall[] | null
+  images?: string[] | null
+}
+
 export interface MessageResponse {
   reply: string
 }

@@ -5,6 +5,7 @@ import { AdminPage } from './admin/AdminPage'
 import { useAuth, useIsAdmin } from './auth/AuthContext'
 import { LoginPage } from './auth/LoginPage'
 import { ChatView } from './chat/ChatView'
+import { ExportMenu } from './layout/ExportMenu'
 import { Sidebar } from './layout/Sidebar'
 import { UserMenu } from './layout/UserMenu'
 import { SettingsDialog } from './settings/SettingsDialog'
@@ -222,6 +223,9 @@ function Console({ username, onLogout }: { username: string; onLogout: () => voi
                 管理
               </button>
             </div>
+          ) : null}
+          {view === 'chat' ? (
+            <ExportMenu session={selected} sessions={sessions} titles={titles} />
           ) : null}
           <UserMenu
             username={username}

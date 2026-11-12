@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import type { AdminUserResponse } from '../api/types'
+import { AdminEmailSection } from './AdminEmailSection'
+import { AdminInviteCodesSection } from './AdminInviteCodesSection'
 import { AdminLlmProvidersSection } from './AdminLlmProvidersSection'
 
-/** The admin console: deployment-level LLM providers plus the account list. */
+/** The admin console: deployment-level LLM providers, invite mail, plus the account list. */
 export function AdminPage() {
   return (
     <div className="admin">
       <div className="admin-inner">
         <h1>管理</h1>
         <AdminLlmProvidersSection />
+        <AdminEmailSection />
+        <AdminInviteCodesSection />
         <UsersSection />
       </div>
     </div>

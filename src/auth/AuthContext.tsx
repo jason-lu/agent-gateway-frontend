@@ -26,6 +26,7 @@ interface AuthState {
 interface AuthContextValue {
   user: AuthState | null
   login: (username: string, password: string) => Promise<void>
+  register: (inviteCode: string, username: string, password: string) => Promise<void>
   logout: () => void
 }
 
@@ -77,6 +78,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  /** Invite-based registration; the response is a full login pair, so the user lands signed in. */
+  const register = useCallback(async (inviteCode: string, username: string, password: string) => {
+    const { token, refreshToken } = await api.register({ inviteCode, username, password })
+    setToken(token)
+    setRefreshToken(refreshToken)
+    const claims = decodeJwt(token)
+    setUser({
+      username: claims?.sub ?? username,
+      roles: claims?.roles ?? [],
+    })
+  }, [])
+
   const logout = useCallback(() => {
     const refreshToken = getRefreshToken()
     if (refreshToken) {
@@ -87,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }, [])
 
-  const value = useMemo(() => ({ user, login, logout }), [user, login, logout])
+  const value = useMemo(() => ({ user, login, register, logout }), [user, login, register, logout])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

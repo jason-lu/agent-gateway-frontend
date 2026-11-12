@@ -2,9 +2,13 @@ import type {
   AdminLlmModelsResponse,
   AdminUserResponse,
   ChangePasswordRequest,
+  CreateInviteRequest,
   CreateSessionRequest,
+  EmailSettingsRequest,
+  EmailSettingsResponse,
   HealthResponse,
   HistoryMessage,
+  InviteCodeResponse,
   LoginRequest,
   LoginResponse,
   LlmModelCatalog,
@@ -17,6 +21,7 @@ import type {
   MessageResponse,
   RawMessage,
   RefreshRequest,
+  RegisterRequest,
   SessionResponse,
 } from './types'
 
@@ -154,6 +159,10 @@ export const api = {
   changePassword: (body: ChangePasswordRequest) =>
     request<void>('/api/v1/auth/change-password', { method: 'POST', body: JSON.stringify(body) }),
 
+  /** Invite-based registration; the response is a full login pair. */
+  register: (body: RegisterRequest) =>
+    request<LoginResponse>('/api/v1/auth/register', { method: 'POST', body: JSON.stringify(body) }),
+
   listSessions: () => request<SessionResponse[]>('/api/v1/sessions'),
 
   createSession: (body: CreateSessionRequest = {}) =>
@@ -230,4 +239,30 @@ export const api = {
 
   deleteMcpServer: (name: string) =>
     request<void>(`/api/v1/settings/mcp-servers/${encodeURIComponent(name)}`, { method: 'DELETE' }),
+
+  adminEmailSettings: () => request<EmailSettingsResponse>('/api/v1/admin/email-settings'),
+
+  updateAdminEmailSettings: (body: EmailSettingsRequest) =>
+    request<EmailSettingsResponse>('/api/v1/admin/email-settings', {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
+
+  /** Delivers a short test mail to prove the stored SMTP account works. */
+  testAdminEmail: (to: string) =>
+    request<void>('/api/v1/admin/email-settings/test', { method: 'POST', body: JSON.stringify({ to }) }),
+
+  adminInviteCodes: () => request<InviteCodeResponse[]>('/api/v1/admin/invite-codes'),
+
+  createAdminInviteCode: (body: CreateInviteRequest) =>
+    request<InviteCodeResponse>('/api/v1/admin/invite-codes', { method: 'POST', body: JSON.stringify(body) }),
+
+  /** Emails the code to its target address. */
+  sendAdminInviteCode: (code: string) =>
+    request<InviteCodeResponse>(`/api/v1/admin/invite-codes/${encodeURIComponent(code)}/send`, {
+      method: 'POST',
+    }),
+
+  deleteAdminInviteCode: (code: string) =>
+    request<void>(`/api/v1/admin/invite-codes/${encodeURIComponent(code)}`, { method: 'DELETE' }),
 }

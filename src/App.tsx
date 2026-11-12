@@ -4,6 +4,7 @@ import type { HealthResponse, SessionResponse } from './api/types'
 import { AdminPage } from './admin/AdminPage'
 import { useAuth, useIsAdmin } from './auth/AuthContext'
 import { LoginPage } from './auth/LoginPage'
+import { RegisterPage } from './auth/RegisterPage'
 import { ChatView } from './chat/ChatView'
 import { ExportMenu } from './layout/ExportMenu'
 import { Sidebar } from './layout/Sidebar'
@@ -15,7 +16,14 @@ const TITLES_KEY = 'agent.sessionTitles'
 
 export default function App() {
   const { user, logout } = useAuth()
-  if (!user) return <LoginPage />
+  const [authView, setAuthView] = useState<'login' | 'register'>('login')
+  if (!user) {
+    return authView === 'register' ? (
+      <RegisterPage onShowLogin={() => setAuthView('login')} />
+    ) : (
+      <LoginPage onShowRegister={() => setAuthView('register')} />
+    )
+  }
   return <Console username={user.username} onLogout={logout} />
 }
 

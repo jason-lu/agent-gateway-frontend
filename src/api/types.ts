@@ -173,6 +173,55 @@ export interface McpServerRequest {
   enabled: boolean
 }
 
+/** Outbound SMTP account for invite mails. password is masked with SECRET_MASK. */
+export interface EmailSettingsResponse {
+  host: string
+  port: number
+  username: string
+  /** Masked with SECRET_MASK when set — the real password never leaves the server. */
+  password: string
+  fromAddress: string
+  useSsl: boolean
+}
+
+/**
+ * Update body for the SMTP account. On update, a blank (or SECRET_MASK) password
+ * keeps the stored one.
+ */
+export interface EmailSettingsRequest {
+  host: string
+  port: number
+  username: string
+  password?: string | null
+  fromAddress: string
+  useSsl: boolean
+}
+
+/** One registration invite code and its delivery/consumption state. */
+export interface InviteCodeResponse {
+  code: string
+  email: string
+  note: string
+  createdBy: string
+  createdAt: string
+  expiresAt: string
+  sentAt: string | null
+  usedBy: string | null
+  usedAt: string | null
+}
+
+export interface CreateInviteRequest {
+  email: string
+  note?: string | null
+  validDays?: number | null
+}
+
+export interface RegisterRequest {
+  inviteCode: string
+  username: string
+  password: string
+}
+
 export interface ErrorResponse {
   status: number
   error: string

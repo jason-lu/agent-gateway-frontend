@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from './AuthContext'
 
-export function LoginPage() {
+export function LoginPage({ onShowRegister }: { onShowRegister?: () => void }) {
   const { login } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -76,6 +76,11 @@ export function LoginPage() {
               {busy ? <span className="spinner" /> : null}
               {busy ? '登录中…' : '登录'}
             </button>
+            {onShowRegister ? (
+              <button className="btn btn-ghost" type="button" onClick={onShowRegister} disabled={busy}>
+                使用邀请码注册
+              </button>
+            ) : null}
           </div>
 
           <div className="login-foot">POST /api/v1/auth/login · JWT BEARER</div>

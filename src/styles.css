@@ -1720,3 +1720,121 @@ a {
     opacity: 1;
   }
 }
+
+/* ---- Voice input ---- */
+
+.voice-draft {
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--r-md);
+  background: var(--accent-soft);
+}
+
+.voice-draft-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--accent-ink);
+}
+
+.voice-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+
+.voice-dot-listening {
+  background: var(--danger);
+  animation: voice-pulse 1.2s ease-in-out infinite;
+}
+
+.voice-dot-ending {
+  animation: voice-pulse 1.2s ease-in-out infinite;
+}
+
+.voice-dot-countdown {
+  background: var(--ok);
+}
+
+.voice-status {
+  flex: 1;
+}
+
+.voice-action {
+  padding: 2px 8px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.voice-action:hover {
+  background: rgba(43, 57, 196, 0.1);
+}
+
+.voice-cancel {
+  color: var(--danger);
+}
+
+.voice-cancel:hover {
+  background: var(--danger-soft);
+}
+
+/* Draft text is provisional — gray + italic until it is sent. */
+.voice-text {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-style: italic;
+  line-height: 1.55;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.voice-text-empty {
+  color: var(--faint);
+}
+
+/* Duration must match CANCEL_WINDOW_MS in voice/useVoiceInput.ts. */
+.voice-countdown {
+  height: 2px;
+  margin-top: 8px;
+  border-radius: 1px;
+  background: var(--accent);
+  animation: voice-shrink 600ms linear forwards;
+}
+
+.composer-icon-btn.voice-active {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.composer-icon-btn.voice-active:hover {
+  background: var(--danger-soft);
+}
+
+@keyframes voice-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes voice-shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0;
+  }
+}

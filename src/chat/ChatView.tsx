@@ -4,6 +4,7 @@ import { streamChat, type SseEvent } from '../api/sse'
 import type { HistoryMessage, LlmModelChoice, SessionResponse } from '../api/types'
 import { MessageContent } from './MessageContent'
 import { AuthImage } from './AuthImage'
+import { useVoiceInput } from '../voice/useVoiceInput'
 
 interface UiMessage {
   role: 'user' | 'assistant'
@@ -176,13 +177,10 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
     [attachments.length],
   )
 
-  const send = useCallback(async () => {
-    const content = input.trim()
-    const images = attachments.map((a) => a.dataUrl)
+  /** Runs one chat turn against the gateway; shared by typed and voice input. */
+  const sendContent = useCallback(async (content: string, images: string[]) => {
     if ((!content && images.length === 0) || sending) return
 
-    setInput('')
-    setAttachments([])
     setSending(true)
     setLoadError(null)
 
@@ -261,7 +259,30 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
       setSending(false)
       textareaRef.current?.focus()
     }
-  }, [input, attachments, sending, session.id, messages.length, onMessageCount, choice])
+  }, [sending, session.id, messages.length, onMessageCount, choice])
+
+  const send = useCallback(() => {
+    const content = input.trim()
+    const images = attachments.map((a) => a.dataUrl)
+    if ((!content && images.length === 0) || sending) return
+    setInput('')
+    setAttachments([])
+    void sendContent(content, images)
+  }, [input, attachments, sending, sendContent])
+
+  const voice = useVoiceInput({
+    onSend: (text) => {
+      // A typed turn may grab the sending slot first — keep the text instead of dropping it.
+      if (sending) {
+        setInput((prev) => (prev ? `${prev}\n${text}` : text))
+        return
+      }
+      void sendContent(text, [])
+    },
+    onCanceled: (text) => {
+      setInput((prev) => (prev ? `${prev}\n${text}` : text))
+    },
+  })
 
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
@@ -354,6 +375,11 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
               {modelError}
             </div>
           ) : null}
+          {voice.error ? (
+            <div className="error-banner" style={{ marginBottom: 10 }}>
+              {voice.error}
+            </div>
+          ) : null}
           <div className="composer-box">
             {attachments.length > 0 ? (
               <div className="composer-attachments">
@@ -372,6 +398,30 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
                 ))}
               </div>
             ) : null}
+            {voice.state !== 'idle' ? (
+              <div className="voice-draft">
+                <div className="voice-draft-head">
+                  <span className={`voice-dot voice-dot-${voice.state}`} />
+                  <span className="voice-status">
+                    {voice.state === 'connecting' && '正在连接…'}
+                    {voice.state === 'listening' && '正在录音 · 说完自动识别'}
+                    {voice.state === 'ending' && '识别中…'}
+                    {voice.state === 'countdown' && '即将发送'}
+                  </span>
+                  {voice.state === 'listening' ? (
+                    <button type="button" className="voice-action" onClick={voice.stop}>
+                      说完了
+                    </button>
+                  ) : voice.state === 'countdown' ? (
+                    <button type="button" className="voice-action voice-cancel" onClick={voice.cancel}>
+                      点击取消
+                    </button>
+                  ) : null}
+                </div>
+                <p className={`voice-text${voice.draft ? '' : ' voice-text-empty'}`}>{voice.draft || '…'}</p>
+                {voice.state === 'countdown' ? <div className="voice-countdown" /> : null}
+              </div>
+            ) : null}
             <textarea
               ref={textareaRef}
               rows={1}
@@ -384,6 +434,32 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
             />
             <div className="composer-bar">
               <div className="composer-bar-left">
+                <button
+                  type="button"
+                  className={`btn btn-ghost composer-icon-btn${
+                    voice.state === 'listening' || voice.state === 'ending' ? ' voice-active' : ''
+                  }`}
+                  onClick={voice.state === 'idle' ? voice.start : voice.stop}
+                  disabled={loading || sending || voice.state === 'connecting' || voice.state === 'countdown'}
+                  aria-label={voice.state === 'idle' ? '语音输入' : '说完了'}
+                  title={voice.state === 'idle' ? '语音输入' : '说完了'}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="9" y="2" width="6" height="12" rx="3" />
+                    <path d="M5 10v2a7 7 0 0 0 14 0v-2" />
+                    <path d="M12 19v3" />
+                  </svg>
+                </button>
                 <button
                   type="button"
                   className="btn btn-ghost composer-icon-btn"

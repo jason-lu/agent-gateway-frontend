@@ -1,13 +1,16 @@
 import { Fragment, type ReactNode } from 'react'
+import { MathFormula } from './MathFormula'
 import { MermaidDiagram } from './MermaidDiagram'
 
 /**
  * Renders LLM replies: fenced code blocks get a framed card (```mermaid fences
  * become real diagrams once closed); the prose around them is parsed as
  * markdown (headings, tables, lists, quotes, rules, links and inline
- * code/bold/italic). Deliberately dependency-free — a small line-based parser
- * covers what LLM answers actually emit. An unterminated fence (still
- * streaming) renders as code.
+ * code/bold/italic). TeX math is recognized too — `$$…$$` / `\[…\]` blocks and
+ * `$…$` / `\(…\)` inline — and typeset with KaTeX. Deliberately
+ * dependency-free aside from those two lazy-loaded renderers — a small
+ * line-based parser covers what LLM answers actually emit. An unterminated
+ * fence or math block (still streaming) renders as raw source.
  */
 export function MessageContent({ text, streaming = false }: { text: string; streaming?: boolean }) {
   const blocks = parseBlocks(text)
@@ -65,6 +68,7 @@ type MdBlock =
   | { kind: 'quote'; lines: string[] }
   | { kind: 'list'; items: ListItem[] }
   | { kind: 'table'; head: string[]; align: ColAlign[]; rows: string[][] }
+  | { kind: 'math'; tex: string; closed: boolean }
 type ListItem = { ordered: boolean; content: string; children: ListItem[] }
 type ColAlign = 'left' | 'center' | 'right' | null
 
@@ -103,6 +107,7 @@ const HEADING_RE = /^(#{1,6})\s+(.+?)\s*#*\s*$/
 const HR_RE = /^\s*(?:(?:-\s*){3,}|(?:\*\s*){3,}|(?:_\s*){3,})$/
 const QUOTE_RE = /^\s*>\s?(.*)$/
 const LIST_RE = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/
+const MATH_BLOCK_START = /^\s*(\$\$|\\\[)/
 
 function isTableSep(line: string): boolean {
   return line.includes('|') && line.includes('-') && /^[\s|:-]+$/.test(line)
@@ -115,6 +120,7 @@ function startsBlock(lines: string[], i: number): boolean {
     HR_RE.test(line) ||
     QUOTE_RE.test(line) ||
     LIST_RE.test(line) ||
+    MATH_BLOCK_START.test(line) ||
     (line.includes('|') && i + 1 < lines.length && isTableSep(lines[i + 1]))
   )
 }
@@ -184,6 +190,43 @@ function parseListBlock(lines: string[], start: number): { items: ListItem[]; ne
   return { items: root, next: i }
 }
 
+/**
+ * Parses a display-math block starting at `lines[start]` — `$$…$$` or `\[…\]`
+ * either on one line or across several. Returns null when the line only looks
+ * like a math opener (closer on the same line but trailing prose after it), so
+ * the caller falls back to a paragraph and inline math takes over.
+ */
+function parseMathBlock(
+  lines: string[],
+  start: number,
+): { block: Extract<MdBlock, { kind: 'math' }>; next: number } | null {
+  const t = lines[start].trim()
+  const isDollar = t.startsWith('$$')
+  const open = isDollar ? '$$' : '\\['
+  const close = isDollar ? '$$' : '\\]'
+  const rest = t.slice(open.length)
+  const idx = rest.indexOf(close)
+  if (idx !== -1) {
+    if (rest.slice(idx + close.length).trim() !== '') return null
+    return { block: { kind: 'math', tex: rest.slice(0, idx), closed: true }, next: start + 1 }
+  }
+
+  const parts: string[] = []
+  if (rest) parts.push(rest)
+  let i = start + 1
+  while (i < lines.length) {
+    const cur = lines[i].trim()
+    if (cur === close || (cur.length > close.length && cur.endsWith(close))) {
+      const before = cur.slice(0, cur.length - close.length)
+      if (before) parts.push(before)
+      return { block: { kind: 'math', tex: parts.join('\n'), closed: true }, next: i + 1 }
+    }
+    parts.push(lines[i])
+    i++
+  }
+  return { block: { kind: 'math', tex: parts.join('\n'), closed: false }, next: i }
+}
+
 function parseMd(text: string): MdBlock[] {
   const lines = text.split(/\r?\n/)
   const blocks: MdBlock[] = []
@@ -207,6 +250,16 @@ function parseMd(text: string): MdBlock[] {
       blocks.push({ kind: 'hr' })
       i++
       continue
+    }
+
+    if (MATH_BLOCK_START.test(line)) {
+      const math = parseMathBlock(lines, i)
+      if (math) {
+        blocks.push(math.block)
+        i = math.next
+        continue
+      }
+      // closer on the same line with prose after it — plain paragraph after all
     }
 
     if (line.includes('|') && i + 1 < lines.length && isTableSep(lines[i + 1])) {
@@ -240,10 +293,10 @@ function parseMd(text: string): MdBlock[] {
     }
 
     const plines: string[] = []
-    while (i < lines.length && lines[i].trim() && !startsBlock(lines, i)) {
+    do {
       plines.push(lines[i])
       i++
-    }
+    } while (i < lines.length && lines[i].trim() && !startsBlock(lines, i))
     blocks.push({ kind: 'p', lines: plines })
   }
   return blocks
@@ -284,6 +337,17 @@ function renderMdBlock(block: MdBlock, key: string, tail: ReactNode): ReactNode 
       )
     case 'list':
       return renderList(block.items, key, tail)
+    case 'math':
+      return (
+        <Fragment key={key}>
+          {block.closed ? (
+            <MathFormula tex={block.tex} display />
+          ) : (
+            <div className="md-math-raw">{block.tex}</div>
+          )}
+          {tail}
+        </Fragment>
+      )
     case 'table':
       return (
         <Fragment key={key}>
@@ -356,9 +420,24 @@ function renderLines(lines: string[]): ReactNode[] {
   return out
 }
 
-/** Wrap `inline code`, **bold**, *italic* and [links](url) spans; rest as text. */
+/**
+ * Inline tokenizer: links, inline code, TeX math (`$$…$$`, `\(…\)`, `\[…\]`,
+ * `$…$`) and bold/italic spans. Math delimiters outrank emphasis; a `$` opens
+ * math only when it is not escaped, not followed by whitespace, and its closer
+ * is not preceded by whitespace and not followed by a digit — so currency
+ * like "$5 与 $10" stays plain text. All groups must stay non-capturing so
+ * `split` only surfaces whole matches.
+ */
+const INLINE_SPLIT_RE =
+  /(\$\$.+?\$\$|\\\(.+?\\\)|\\\[.+?\\\]|(?<!\\)\$(?!\s)(?:[^$\\\n]|\\.)+?(?<!\s)\$(?!\d)|\[[^\]\n]+\]\([^)\n]+\)|`[^`\n]+`|\*\*[^*\n]+\*\*|\*[^*\n]+\*)/g
+const MATH_DOLLAR_DOLLAR = /^\$\$.+\$\$$/
+const MATH_BRACKET = /^\\\[.+\\\]$/
+const MATH_PAREN = /^\\\(.+\\\)$/
+const MATH_DOLLAR = /^\$(?!\s)(?:[^$\\\n]|\\.)+?(?<!\s)\$(?!\d)$/
+
+/** Wrap `inline code`, TeX math, **bold**, *italic* and [links](url); rest as text. */
 function renderProse(text: string): ReactNode[] {
-  const parts = text.split(/(\[[^\]\n]+\]\([^)\n]+\)|`[^`\n]+`|\*\*[^*\n]+\*\*|\*[^*\n]+\*)/g)
+  const parts = text.split(INLINE_SPLIT_RE)
   return parts.map((part, i) => {
     if (!part) return null
     if (part.startsWith('`') && part.endsWith('`') && part.length > 2) {
@@ -369,10 +448,22 @@ function renderProse(text: string): ReactNode[] {
       )
     }
     if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
-      return <strong key={i}>{part.slice(2, -2)}</strong>
+      return <strong key={i}>{renderProse(part.slice(2, -2))}</strong>
     }
     if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
-      return <em key={i}>{part.slice(1, -1)}</em>
+      return <em key={i}>{renderProse(part.slice(1, -1))}</em>
+    }
+    if (MATH_DOLLAR_DOLLAR.test(part)) {
+      return <MathFormula key={i} tex={part.slice(2, -2)} display={false} />
+    }
+    if (MATH_BRACKET.test(part)) {
+      return <MathFormula key={i} tex={part.slice(2, -2)} display={false} />
+    }
+    if (MATH_PAREN.test(part)) {
+      return <MathFormula key={i} tex={part.slice(2, -2)} display={false} />
+    }
+    if (MATH_DOLLAR.test(part)) {
+      return <MathFormula key={i} tex={part.slice(1, -1)} display={false} />
     }
     const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part)
     if (link) {
@@ -385,6 +476,6 @@ function renderProse(text: string): ReactNode[] {
         )
       }
     }
-    return <Fragment key={i}>{part}</Fragment>
+    return <Fragment key={i}>{part.replace(/\\\$/g, '$')}</Fragment>
   })
 }

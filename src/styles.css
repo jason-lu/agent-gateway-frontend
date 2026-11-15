@@ -1,3 +1,8 @@
+/* KaTeX typesetting for TeX math in LLM replies. Resolved from node_modules so
+   the throwaway verify pages under output/ can @import the same file and pick
+   up the fonts via KaTeX's own relative URLs. */
+@import '../node_modules/katex/dist/katex.min.css';
+
 /* ============================================================
    Self-hosted webfonts (latin + latin-ext, variable weight).
    Replaces the former Google Fonts <link> so first paint never
@@ -1256,6 +1261,40 @@ a {
 
 .md-mermaid-pending {
   min-height: 80px;
+}
+
+/* TeX math (KaTeX) */
+
+.md-math-display {
+  display: block;
+  margin: 10px 0;
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.md-math-inline {
+  white-space: nowrap;
+}
+
+.md-math-raw {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--muted);
+  white-space: pre;
+}
+
+.md-math-raw-inline {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--faint);
 }
 
 /* markdown blocks */

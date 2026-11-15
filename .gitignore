@@ -5,3 +5,6 @@ output/
 *.log
 *.tsbuildinfo
 .DS_Store
+
+### PowerShell scripts (local workstation tooling) ###
+*.ps1

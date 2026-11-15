@@ -1,11 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { resolve } from 'node:path'
 
-// Built assets are emitted into the Spring Boot classpath static folder so the
-// gateway serves the UI from the same origin as /api/v1 (no CORS needed).
-const webStatic = resolve(__dirname, '../agent/web/src/main/resources/static')
-
+// Built assets go to frontend/dist and are deployed to nginx as static files.
+// nginx serves the UI and proxies /api/v1 to the gateway, so the two sides
+// stay independently deployable (no CORS: same origin in production).
 export default defineConfig({
   plugins: [react()],
   base: './',
@@ -21,7 +19,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: webStatic,
+    outDir: 'dist',
     emptyOutDir: true,
     assetsDir: 'assets',
     // Mermaid (lazy via import('mermaid')) ships vendor chunks well over the 500 kB

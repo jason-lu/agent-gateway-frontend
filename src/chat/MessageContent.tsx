@@ -500,7 +500,8 @@ function fileArtifactLink(key: number, href: string, label: string): ReactNode {
         e.preventDefault()
         void downloadAuthedFile(href).catch((err) => {
           console.error('artifact download failed', err)
-          alert('文件下载失败，请重试')
+          const reason = err instanceof Error ? err.message : String(err)
+          alert(`文件下载失败：${reason}`)
         })
       }}
     >

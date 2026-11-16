@@ -1,3 +1,4 @@
+import { fetchWithAuth } from '../api/client'
 import type { RawMessage, SessionResponse } from '../api/types'
 
 /** One session plus its full raw transcript, ready to serialize. */
@@ -102,6 +103,73 @@ export function downloadTextFile(filename: string, content: string, mime: string
   a.click()
   a.remove()
   URL.revokeObjectURL(url)
+}
+
+const ARTIFACT_PATH = '/api/v1/files/'
+
+/** True for tool artifact links: `/api/v1/files/...` on any host. */
+export function isFileArtifactUrl(href: string): boolean {
+  return artifactPath(href) !== null
+}
+
+/** Downloaded-file label for link text: the decoded last path segment. */
+export function artifactFileLabel(href: string): string {
+  const path = artifactPath(href) ?? href
+  const last = path.split(/[?#]/)[0].split('/').pop() ?? ''
+  try {
+    return decodeURIComponent(last) || '下载文件'
+  } catch {
+    return last || '下载文件'
+  }
+}
+
+/**
+ * Downloads a tool artifact with the bearer token attached — a plain link click
+ * cannot carry the JWT, so the chat renderer routes `/api/v1/files/` links
+ * through here instead of navigating (that navigation is what 401s). Absolute
+ * URLs are fetched by path so the dev proxy and the production same-origin
+ * setup both work regardless of the host the tool reported.
+ */
+export async function downloadAuthedFile(href: string): Promise<void> {
+  const path = artifactPath(href)
+  if (!path) throw new Error(`not an artifact url: ${href}`)
+  const response = await fetchWithAuth(path)
+  if (!response.ok) throw new Error(`download failed: HTTP ${response.status}`)
+  const blob = await response.blob()
+  const objectUrl = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = objectUrl
+  a.download = fileNameFromDisposition(response.headers.get('Content-Disposition')) ?? artifactFileLabel(href)
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(objectUrl)
+}
+
+/** @return the artifact path (plus query) on the page origin, or {@code null} when not an artifact URL */
+function artifactPath(href: string): string | null {
+  const trimmed = href.trim()
+  if (trimmed.startsWith(ARTIFACT_PATH)) return trimmed
+  try {
+    const url = new URL(trimmed, window.location.href)
+    return url.pathname.startsWith(ARTIFACT_PATH) ? url.pathname + url.search : null
+  } catch {
+    return null
+  }
+}
+
+function fileNameFromDisposition(header: string | null): string | null {
+  if (!header) return null
+  const star = /filename\*=UTF-8''([^;]+)/i.exec(header)
+  if (star) {
+    try {
+      return decodeURIComponent(star[1].trim())
+    } catch {
+      return star[1].trim()
+    }
+  }
+  const plain = /filename="?([^";]+)"?/i.exec(header)
+  return plain ? plain[1].trim() : null
 }
 
 /** `聊天记录-<title>-20260219-1430.json` — safe on Windows, sortable by date. */

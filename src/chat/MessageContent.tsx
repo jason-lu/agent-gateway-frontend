@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from 'react'
+import { artifactFileLabel, downloadAuthedFile, isFileArtifactUrl } from '../lib/export'
 import { MathFormula } from './MathFormula'
 import { MermaidDiagram } from './MermaidDiagram'
 
@@ -429,7 +430,7 @@ function renderLines(lines: string[]): ReactNode[] {
  * `split` only surfaces whole matches.
  */
 const INLINE_SPLIT_RE =
-  /(\$\$.+?\$\$|\\\(.+?\\\)|\\\[.+?\\\]|(?<!\\)\$(?!\s)(?:[^$\\\n]|\\.)+?(?<!\s)\$(?!\d)|\[[^\]\n]+\]\([^)\n]+\)|`[^`\n]+`|\*\*[^*\n]+\*\*|\*[^*\n]+\*)/g
+  /(\$\$.+?\$\$|\\\(.+?\\\)|\\\[.+?\\\]|(?<!\\)\$(?!\s)(?:[^$\\\n]|\\.)+?(?<!\s)\$(?!\d)|https?:\/\/[^\s?#)\]}>，。；：！、）】]*\/api\/v1\/files\/[^\s)\]}>，。；：！、）】]+|\/api\/v1\/files\/[^\s)\]}>，。；：！、）】]+|\[[^\]\n]+\]\([^)\n]+\)|`[^`\n]+`|\*\*[^*\n]+\*\*|\*[^*\n]+\*)/g
 const MATH_DOLLAR_DOLLAR = /^\$\$.+\$\$$/
 const MATH_BRACKET = /^\\\[.+\\\]$/
 const MATH_PAREN = /^\\\(.+\\\)$/
@@ -465,9 +466,15 @@ function renderProse(text: string): ReactNode[] {
     if (MATH_DOLLAR.test(part)) {
       return <MathFormula key={i} tex={part.slice(1, -1)} display={false} />
     }
+    if (isFileArtifactUrl(part)) {
+      return fileArtifactLink(i, part, artifactFileLabel(part))
+    }
     const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part)
     if (link) {
       const href = link[2]
+      if (isFileArtifactUrl(href)) {
+        return fileArtifactLink(i, href, link[1])
+      }
       if (/^(https?:\/\/|mailto:)/i.test(href)) {
         return (
           <a key={i} href={href} target="_blank" rel="noreferrer">
@@ -478,4 +485,26 @@ function renderProse(text: string): ReactNode[] {
     }
     return <Fragment key={i}>{part.replace(/\\\$/g, '$')}</Fragment>
   })
+}
+
+/**
+ * File artifact link: no navigation — the click downloads through the
+ * authenticated API (a plain href cannot carry the JWT).
+ */
+function fileArtifactLink(key: number, href: string, label: string): ReactNode {
+  return (
+    <a
+      key={key}
+      href={href}
+      onClick={(e) => {
+        e.preventDefault()
+        void downloadAuthedFile(href).catch((err) => {
+          console.error('artifact download failed', err)
+          alert('文件下载失败，请重试')
+        })
+      }}
+    >
+      {label}
+    </a>
+  )
 }

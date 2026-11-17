@@ -19,6 +19,10 @@ import type {
   McpServerRequest,
   McpServerResponse,
   MessageResponse,
+  MemoryListResponse,
+  MemoryUpdateBody,
+  ProfileBody,
+  ProfileResponse,
   RawMessage,
   RefreshRequest,
   RegisterRequest,
@@ -265,4 +269,22 @@ export const api = {
 
   deleteAdminInviteCode: (code: string) =>
     request<void>(`/api/v1/admin/invite-codes/${encodeURIComponent(code)}`, { method: 'DELETE' }),
+
+  listMemories: () => request<MemoryListResponse>('/api/v1/memories'),
+
+  updateMemory: (id: string, body: MemoryUpdateBody) =>
+    request<never>(`/api/v1/memories/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }),
+
+  deleteMemory: (id: string) =>
+    request<void>(`/api/v1/memories/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  clearMemories: () => request<void>('/api/v1/memories/clear', { method: 'POST' }),
+
+  getProfile: () => request<ProfileResponse>('/api/v1/profile'),
+
+  updateProfile: (body: ProfileBody) =>
+    request<ProfileResponse>('/api/v1/profile', { method: 'PUT', body: JSON.stringify(body) }),
 }

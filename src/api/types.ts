@@ -227,3 +227,39 @@ export interface ErrorResponse {
   error: string
   message: string
 }
+
+/** The whitelisted personal archive; null fields are absent. */
+export interface ProfileResponse {
+  nickname: string | null
+  gender: string | null
+  city: string | null
+}
+
+/** Profile write (PUT semantics: null clears the field). */
+export interface ProfileBody {
+  nickname?: string | null
+  gender?: string | null
+  city?: string | null
+}
+
+/** One semantic-memory entry. */
+export interface MemoryEntryResponse {
+  id: string
+  kind: string
+  content: string
+  source: string
+  sourceSessionId: string | null
+  createdAt: string | null
+  updatedAt: string | null
+}
+
+/** The memory panel payload: profile plus every active entry. */
+export interface MemoryListResponse {
+  profile: ProfileResponse
+  entries: MemoryEntryResponse[]
+}
+
+/** Entry edit: content only (kind and source are immutable). */
+export interface MemoryUpdateBody {
+  content: string
+}

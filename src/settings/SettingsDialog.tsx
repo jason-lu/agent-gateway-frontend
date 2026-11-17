@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { ChangePasswordSection } from './ChangePasswordSection'
 import { McpServersSection } from './McpServersSection'
+import { MemorySection } from './MemorySection'
 
 interface SettingsDialogProps {
   onClose: () => void
 }
 
-type SettingsTab = 'mcp' | 'security'
+type SettingsTab = 'mcp' | 'memory' | 'security'
 
 /** Account settings: personal MCP servers and password management. */
 export function SettingsDialog({ onClose }: SettingsDialogProps) {
@@ -47,6 +48,14 @@ export function SettingsDialog({ onClose }: SettingsDialogProps) {
           </button>
           <button
             role="tab"
+            aria-selected={tab === 'memory'}
+            className={tab === 'memory' ? 'active' : ''}
+            onClick={() => setTab('memory')}
+          >
+            记忆
+          </button>
+          <button
+            role="tab"
             aria-selected={tab === 'security'}
             className={tab === 'security' ? 'active' : ''}
             onClick={() => setTab('security')}
@@ -55,7 +64,7 @@ export function SettingsDialog({ onClose }: SettingsDialogProps) {
           </button>
         </div>
 
-        {tab === 'mcp' ? <McpServersSection /> : <ChangePasswordSection />}
+        {tab === 'mcp' ? <McpServersSection /> : tab === 'memory' ? <MemorySection /> : <ChangePasswordSection />}
       </div>
     </div>
   )

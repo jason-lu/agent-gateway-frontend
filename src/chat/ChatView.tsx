@@ -217,6 +217,9 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
         settled = true
         acc = event.reply
         patchAssistant({ content: acc, streaming: false })
+      } else if (event.type === 'moderation') {
+        // Content moderation stepped in; the closing done/error event carries
+        // the user-visible wording (never the rule or term), so just wait for it.
       } else {
         settled = true
         // Always surface the failure: a partial answer says why it stopped; with

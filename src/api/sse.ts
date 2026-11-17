@@ -4,6 +4,7 @@ export type SseEvent =
   | { type: 'delta'; text: string }
   | { type: 'done'; reply: string }
   | { type: 'error'; message: string }
+  | { type: 'moderation'; action: string; category: string; direction: string }
 
 /**
  * The gateway streams chat over a POST with a JSON body, so the browser's native
@@ -75,6 +76,13 @@ export async function streamChat(
       onEvent({
         type: 'error',
         message: typeof data.message === 'string' ? data.message : '流式响应出错',
+      })
+    } else if (event === 'moderation') {
+      onEvent({
+        type: 'moderation',
+        action: typeof data.action === 'string' ? data.action : 'blocked',
+        category: typeof data.category === 'string' ? data.category : '',
+        direction: typeof data.direction === 'string' ? data.direction : '',
       })
     }
   }

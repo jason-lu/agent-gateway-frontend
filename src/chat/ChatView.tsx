@@ -24,6 +24,9 @@ interface Attachment {
 /** Kept in sync with the gateway's per-message image cap. */
 const MAX_ATTACHMENTS = 10
 
+/** Kept in sync with the gateway's per-message text cap (SessionController.MAX_CONTENT_CHARS). */
+const MAX_CONTENT_CHARS = 8000
+
 /** Roughly the gateway's per-image size limit (base64 inflates by ~1/3). */
 const MAX_IMAGE_BYTES = 18 * 1024 * 1024
 
@@ -268,6 +271,11 @@ export function ChatView({ session, onTitleHint, onMessageCount }: ChatViewProps
     const content = input.trim()
     const images = attachments.map((a) => a.dataUrl)
     if ((!content && images.length === 0) || sending) return
+    if (content.length > MAX_CONTENT_CHARS) {
+      // Keep the draft so the user can split it instead of retyping.
+      setLoadError(`输入过长（${content.length} 字符），请分段发送（单次上限 ${MAX_CONTENT_CHARS} 字符）`)
+      return
+    }
     setInput('')
     setAttachments([])
     void sendContent(content, images)

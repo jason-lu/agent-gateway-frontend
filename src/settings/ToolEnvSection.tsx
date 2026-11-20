@@ -77,6 +77,8 @@ export function ToolEnvSection() {
         这里绑定的凭据（如 GH_TOKEN、GCLOUD_SA_KEY）只注入到你自己账号的命令执行环境，
         不会出现在其他人的会话里，也永远不会回显到页面或聊天。值同时会写入你工作区的
         .secrets/&lt;键名&gt; 文件，方便 gcloud 这类需要密钥文件的工具直接使用。
+        绑定 GH_TOKEN 后还会自动获得你自己的 GitHub MCP 工具——共享的 GitHub 连接已下线，
+        每个人用自己的 token 访问自己的仓库。
       </p>
 
       {listError ? <div className="error-banner">{listError}</div> : null}

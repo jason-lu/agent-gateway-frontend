@@ -326,6 +326,8 @@ function statusLabel(status: McpServerResponse['status']): string {
   switch (status) {
     case 'connected':
       return '已连接'
+    case 'no_tools':
+      return '已连接 · 无工具'
     case 'disconnected':
       return '未连接'
     case 'disabled':

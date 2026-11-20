@@ -148,7 +148,7 @@ export const SECRET_MASK = '••••••••'
 
 export type McpTransport = 'stdio' | 'http'
 
-export type McpServerStatus = 'connected' | 'disconnected' | 'disabled' | 'unknown'
+export type McpServerStatus = 'connected' | 'no_tools' | 'disconnected' | 'disabled' | 'unknown'
 
 export interface McpServerResponse {
   name: string

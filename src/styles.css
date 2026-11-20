@@ -436,6 +436,11 @@ a {
   color: var(--ok);
 }
 
+.mcp-status-no_tools {
+  background: #fbf1e0;
+  color: #9a6a12;
+}
+
 .mcp-status-disconnected {
   background: var(--danger-soft);
   color: var(--danger);

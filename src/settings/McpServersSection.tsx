@@ -29,17 +29,21 @@ export function McpServersSection() {
   const [saving, setSaving] = useState(false)
   const [deleteArmed, setDeleteArmed] = useState<string | null>(null)
 
-  const reload = useCallback(async () => {
+  const reload = useCallback(async (silent = false) => {
     try {
       setServers(await api.listMcpServers())
       setListError(null)
     } catch (err) {
-      setListError(err instanceof Error ? err.message : '加载失败')
+      if (!silent) setListError(err instanceof Error ? err.message : '加载失败')
     }
   }, [])
 
   useEffect(() => {
     void reload()
+    // Connection states settle in the background after save (待连接 → 已连接/未连接);
+    // poll so they flip without reopening the dialog.
+    const timer = window.setInterval(() => void reload(true), 3000)
+    return () => window.clearInterval(timer)
   }, [reload])
 
   function startCreate() {
@@ -78,6 +82,13 @@ export function McpServersSection() {
     if (!name) {
       setFormError('请填写名称')
       return
+    }
+    if (editor.transport === 'http') {
+      const urlError = checkHttpUrl(editor.url)
+      if (urlError) {
+        setFormError(urlError)
+        return
+      }
     }
     const body: McpServerRequest = {
       name,
@@ -322,6 +333,28 @@ function statusLabel(status: McpServerResponse['status']): string {
     default:
       return '待连接'
   }
+}
+
+/**
+ * Mirrors the server-side trust rule: remote MCP URLs must be https, plain http
+ * is only for loopback (local development). Catches the mistake at save time.
+ */
+function checkHttpUrl(raw: string): string | null {
+  const url = raw.trim()
+  if (!url) return '请填写 URL'
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return 'URL 不合法，请填写完整地址'
+  }
+  if (parsed.protocol === 'https:') return null
+  if (parsed.protocol === 'http:') {
+    const host = parsed.hostname
+    if (host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '[::1]') return null
+    return '远程 URL 必须使用 https://（仅本地回环地址可用 http://）'
+  }
+  return 'URL 协议必须是 https://'
 }
 
 function toRows(map: Record<string, string>): KvRow[] {

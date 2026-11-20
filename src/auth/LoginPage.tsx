@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import { useAuth } from './AuthContext'
 
-export function LoginPage({ onShowRegister }: { onShowRegister?: () => void }) {
+export function LoginPage({
+  onShowRegister,
+  onShowForgot,
+}: {
+  onShowRegister?: () => void
+  onShowForgot?: () => void
+}) {
   const { login } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -79,6 +85,11 @@ export function LoginPage({ onShowRegister }: { onShowRegister?: () => void }) {
             {onShowRegister ? (
               <button className="btn btn-ghost" type="button" onClick={onShowRegister} disabled={busy}>
                 使用邀请码注册
+              </button>
+            ) : null}
+            {onShowForgot ? (
+              <button className="login-link" type="button" onClick={onShowForgot} disabled={busy}>
+                忘记密码？
               </button>
             ) : null}
           </div>

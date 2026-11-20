@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { api } from '../api/client'
 import { useAuth } from './AuthContext'
 
 /** Invite-based registration: the code is consumed exactly once, then auto-login. */
@@ -10,6 +11,32 @@ export function RegisterPage({ onShowLogin }: { onShowLogin: () => void }) {
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [boundEmail, setBoundEmail] = useState<string | null>(null)
+
+  // Show which mailbox the account will be tied to (the binding itself happens
+  // at registration, from the invite code).
+  useEffect(() => {
+    const code = inviteCode.trim()
+    if (!code) {
+      setBoundEmail(null)
+      return
+    }
+    let alive = true
+    const timer = window.setTimeout(() => {
+      api
+        .invitePreview(code)
+        .then((preview) => {
+          if (alive) setBoundEmail(preview.email)
+        })
+        .catch(() => {
+          if (alive) setBoundEmail(null)
+        })
+    }, 400)
+    return () => {
+      alive = false
+      window.clearTimeout(timer)
+    }
+  }, [inviteCode])
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -46,7 +73,9 @@ export function RegisterPage({ onShowLogin }: { onShowLogin: () => void }) {
           </div>
 
           <h1>使用邀请码注册</h1>
-          <p className="login-sub">邀请码由管理员生成并通过邮件发送，使用一次后即失效。</p>
+          <p className="login-sub">
+            邀请码由管理员生成并通过邮件发送，使用一次后即失效。注册时会自动绑定邀请码对应的邮箱，可用于找回密码。
+          </p>
 
           {error && (
             <div className="error-banner" role="alert" style={{ marginBottom: 16 }}>
@@ -67,6 +96,9 @@ export function RegisterPage({ onShowLogin }: { onShowLogin: () => void }) {
               autoFocus
               placeholder="如 K7M2QX9P"
             />
+            {boundEmail ? (
+              <div className="field-hint">注册后将绑定邮箱 {boundEmail}，可用于找回密码。</div>
+            ) : null}
           </div>
 
           <div className="login-field">

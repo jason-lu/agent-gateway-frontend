@@ -3,8 +3,10 @@ import { api, ApiError } from './api/client'
 import type { HealthResponse, SessionResponse } from './api/types'
 import { AdminPage } from './admin/AdminPage'
 import { useAuth, useIsAdmin } from './auth/AuthContext'
+import { ForgotPasswordPage } from './auth/ForgotPasswordPage'
 import { LoginPage } from './auth/LoginPage'
 import { RegisterPage } from './auth/RegisterPage'
+import { ResetPasswordPage } from './auth/ResetPasswordPage'
 import { ChatView } from './chat/ChatView'
 import { ExportMenu } from './layout/ExportMenu'
 import { Sidebar } from './layout/Sidebar'
@@ -14,15 +16,37 @@ import { SettingsDialog } from './settings/SettingsDialog'
 const SELECTED_KEY = 'agent.selectedSession'
 const TITLES_KEY = 'agent.sessionTitles'
 
+type AuthView = 'login' | 'register' | 'forgot' | 'reset'
+
+/**
+ * The auth screen to open on load: a `?reset=<token>` query (the link shape used
+ * in forgot-password mails) lands directly on the reset form.
+ */
+function initialAuthState(): { view: AuthView; resetToken: string | null } {
+  const token = new URLSearchParams(window.location.search).get('reset')
+  return token ? { view: 'reset', resetToken: token } : { view: 'login', resetToken: null }
+}
+
 export default function App() {
   const { user, logout } = useAuth()
-  const [authView, setAuthView] = useState<'login' | 'register'>('login')
+  const [authState, setAuthState] = useState(initialAuthState)
   if (!user) {
-    return authView === 'register' ? (
-      <RegisterPage onShowLogin={() => setAuthView('login')} />
-    ) : (
-      <LoginPage onShowRegister={() => setAuthView('register')} />
-    )
+    const showLogin = () => setAuthState({ view: 'login', resetToken: null })
+    switch (authState.view) {
+      case 'register':
+        return <RegisterPage onShowLogin={showLogin} />
+      case 'forgot':
+        return <ForgotPasswordPage onShowLogin={showLogin} />
+      case 'reset':
+        return <ResetPasswordPage initialToken={authState.resetToken} onShowLogin={showLogin} />
+      default:
+        return (
+          <LoginPage
+            onShowRegister={() => setAuthState({ view: 'register', resetToken: null })}
+            onShowForgot={() => setAuthState({ view: 'forgot', resetToken: null })}
+          />
+        )
+    }
   }
   return <Console username={user.username} onLogout={logout} />
 }

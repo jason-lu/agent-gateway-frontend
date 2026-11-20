@@ -6,9 +6,11 @@ import type {
   CreateSessionRequest,
   EmailSettingsRequest,
   EmailSettingsResponse,
+  ForgotPasswordRequest,
   HealthResponse,
   HistoryMessage,
   InviteCodeResponse,
+  InvitePreviewResponse,
   LoginRequest,
   LoginResponse,
   LlmModelCatalog,
@@ -26,6 +28,7 @@ import type {
   RawMessage,
   RefreshRequest,
   RegisterRequest,
+  ResetPasswordRequest,
   SessionResponse,
 } from './types'
 
@@ -166,6 +169,20 @@ export const api = {
   /** Invite-based registration; the response is a full login pair. */
   register: (body: RegisterRequest) =>
     request<LoginResponse>('/api/v1/auth/register', { method: 'POST', body: JSON.stringify(body) }),
+
+  /** The address an unused invite code would bind to the new account. */
+  invitePreview: (inviteCode: string) =>
+    request<InvitePreviewResponse>('/api/v1/auth/invite-preview', {
+      method: 'POST',
+      body: JSON.stringify({ inviteCode }),
+    }),
+
+  /** Mails a reset token to the account's bound address; always succeeds from the caller's view. */
+  forgotPassword: (body: ForgotPasswordRequest) =>
+    request<void>('/api/v1/auth/forgot-password', { method: 'POST', body: JSON.stringify(body) }),
+
+  resetPassword: (body: ResetPasswordRequest) =>
+    request<void>('/api/v1/auth/reset-password', { method: 'POST', body: JSON.stringify(body) }),
 
   listSessions: () => request<SessionResponse[]>('/api/v1/sessions'),
 

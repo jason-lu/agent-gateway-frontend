@@ -222,6 +222,20 @@ export interface RegisterRequest {
   password: string
 }
 
+/** The address an invite code would bind to the new account at registration. */
+export interface InvitePreviewResponse {
+  email: string
+}
+
+export interface ForgotPasswordRequest {
+  username: string
+}
+
+export interface ResetPasswordRequest {
+  token: string
+  newPassword: string
+}
+
 export interface ErrorResponse {
   status: number
   error: string

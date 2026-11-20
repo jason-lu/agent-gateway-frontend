@@ -571,6 +571,29 @@ a {
   font-size: 11px;
 }
 
+.login-link {
+  align-self: center;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.login-link:hover {
+  color: var(--accent-ink);
+}
+
+.field-hint {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .login-art {
   position: relative;
   overflow: hidden;

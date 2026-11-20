@@ -244,6 +244,18 @@ export const api = {
   deleteMcpServer: (name: string) =>
     request<void>(`/api/v1/settings/mcp-servers/${encodeURIComponent(name)}`, { method: 'DELETE' }),
 
+  /** Per-user tool credentials (GH_TOKEN and friends); values come back masked. */
+  listToolEnv: () => request<Record<string, string>>('/api/v1/settings/tool-env'),
+
+  saveToolEnv: (key: string, value: string) =>
+    request<Record<string, string>>(`/api/v1/settings/tool-env/${encodeURIComponent(key)}`, {
+      method: 'PUT',
+      body: JSON.stringify({ value }),
+    }),
+
+  deleteToolEnv: (key: string) =>
+    request<void>(`/api/v1/settings/tool-env/${encodeURIComponent(key)}`, { method: 'DELETE' }),
+
   adminEmailSettings: () => request<EmailSettingsResponse>('/api/v1/admin/email-settings'),
 
   updateAdminEmailSettings: (body: EmailSettingsRequest) =>

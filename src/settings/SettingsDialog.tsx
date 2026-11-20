@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react'
 import { ChangePasswordSection } from './ChangePasswordSection'
 import { McpServersSection } from './McpServersSection'
 import { MemorySection } from './MemorySection'
+import { ToolEnvSection } from './ToolEnvSection'
 
 interface SettingsDialogProps {
   onClose: () => void
 }
 
-type SettingsTab = 'mcp' | 'memory' | 'security'
+type SettingsTab = 'mcp' | 'toolenv' | 'memory' | 'security'
 
-/** Account settings: personal MCP servers and password management. */
+/** Account settings: personal MCP servers, tool credentials and password management. */
 export function SettingsDialog({ onClose }: SettingsDialogProps) {
   const [tab, setTab] = useState<SettingsTab>('mcp')
 
@@ -48,6 +49,14 @@ export function SettingsDialog({ onClose }: SettingsDialogProps) {
           </button>
           <button
             role="tab"
+            aria-selected={tab === 'toolenv'}
+            className={tab === 'toolenv' ? 'active' : ''}
+            onClick={() => setTab('toolenv')}
+          >
+            工具凭据
+          </button>
+          <button
+            role="tab"
             aria-selected={tab === 'memory'}
             className={tab === 'memory' ? 'active' : ''}
             onClick={() => setTab('memory')}
@@ -64,7 +73,15 @@ export function SettingsDialog({ onClose }: SettingsDialogProps) {
           </button>
         </div>
 
-        {tab === 'mcp' ? <McpServersSection /> : tab === 'memory' ? <MemorySection /> : <ChangePasswordSection />}
+        {tab === 'mcp' ? (
+          <McpServersSection />
+        ) : tab === 'toolenv' ? (
+          <ToolEnvSection />
+        ) : tab === 'memory' ? (
+          <MemorySection />
+        ) : (
+          <ChangePasswordSection />
+        )}
       </div>
     </div>
   )

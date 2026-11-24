@@ -1,8 +1,9 @@
 import { fetchWithAuth } from './client'
+import type { TokenUsage } from './types'
 
 export type SseEvent =
   | { type: 'delta'; text: string }
-  | { type: 'done'; reply: string }
+  | { type: 'done'; reply: string; usage?: TokenUsage | null }
   | { type: 'error'; message: string }
   | { type: 'moderation'; action: string; category: string; direction: string }
 
@@ -70,7 +71,7 @@ export async function streamChat(
       onEvent({ type: 'delta', text: data.text })
     } else if (event === 'done' && typeof data.reply === 'string') {
       finished = true
-      onEvent({ type: 'done', reply: data.reply })
+      onEvent({ type: 'done', reply: data.reply, usage: (data.usage as TokenUsage | undefined) ?? null })
     } else if (event === 'error') {
       finished = true
       onEvent({

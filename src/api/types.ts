@@ -63,10 +63,23 @@ export interface RawMessage {
   toolCallId?: string | null
   toolCalls?: ToolCall[] | null
   images?: string[] | null
+  /** Tokens the assistant turn's model call consumed; null when not reported. */
+  usage?: TokenUsage | null
+}
+
+/** Token accounting of one model call, as reported by the OpenAI-style upstream. */
+export interface TokenUsage {
+  promptTokens: number
+  completionTokens: number
+  totalTokens: number
+  reasoningTokens: number
+  cachedTokens: number
 }
 
 export interface MessageResponse {
   reply: string
+  /** The turn's token total (summed over its model rounds); null when not reported. */
+  usage?: TokenUsage | null
 }
 
 export interface HealthResponse {
